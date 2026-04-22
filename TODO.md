@@ -1,260 +1,83 @@
-# BACK-OFFICE TITRE DE SÉJOUR MADAGASCAR
+# 📋 TODO - Fonctionnalités du projet VISA Transformable
 
-## Structure Spring Boot MVC  +  Todo liste des 3 sprints
+## 1. Gestion des personnes (état civil)
+- [ ] Saisir une nouvelle personne (nom, nom jeune fille, date/lieu naissance, situation familiale, nationalité, profession, adresse, contact, email)
+- [ ] Ajouter une photo de la personne
+- [ ] Rechercher une personne (par nom, email, numéro VISA, numéro carte)
+- [ ] Modifier les informations d'une personne
+- [ ] Consulter le détail d'une personne
 
-## STRUCTURE DU PROJET
+## 2. Gestion des VISA
+- [ ] Enregistrer un VISA pour une personne (numéro VISA, date entrée, date fin, statut travailleur/investisseur)
+- [ ] Marquer un VISA comme "transformable" (VISA T)
+- [ ] Marquer un VISA comme "connu intérieur"
+- [ ] Transférer un VISA
+- [ ] Consulter l'historique des VISA d'une personne
 
-```
-titre-sejour-backend/
-│
-├── src/main/java/mg/visa
-│   │
-│   │
-│   ├── entity/                         # Une classe par table
-│   │   ├── ref/
-│   │   │   ├── StatutDossier.java
-│   │   │   ├── StatutPiece.java
-│   │   │   ├── Nationalite.java
-│   │   │   ├── SituationFamiliale.java
-│   │   │   └── TypeIdentite.java
-│   │   │
-│   │   ├── Demandeur.java
-│   │   ├── Passeport.java
-│   │   ├── VisaTransformable.java
-│   │   ├── Dossier.java
-│   │   ├── CataloguePieceCommune.java
-│   │   ├── CataloguePieceComplementaire.java
-│   │   ├── DossierPieceCommune.java
-│   │   └── DossierPieceComplementaire.java
-│   │
-│   ├── repository/                     # JpaRepository — une par entity
-│   │   ├── ref/
-│   │   │   ├── StatutDossierRepository.java
-│   │   │   ├── StatutPieceRepository.java
-│   │   │   ├── NationaliteRepository.java
-│   │   │   ├── SituationFamilialeRepository.java
-│   │   │   └── TypeIdentiteRepository.java
-│   │   │
-│   │   ├── DemandeurRepository.java
-│   │   ├── PasseportRepository.java
-│   │   ├── VisaTransformableRepository.java
-│   │   ├── DossierRepository.java
-│   │   ├── CataloguePieceCommuneRepository.java
-│   │   ├── CataloguePieceComplementaireRepository.java
-│   │   ├── DossierPieceCommuneRepository.java
-│   │   └── DossierPieceComplementaireRepository.java
-│   │
-│   ├── dto/                            # Objets de transfert (pas d'entity dans le front)
-│   │   ├── DemandeurDTO.java           # état civil complet
-│   │   ├── PasseportDTO.java
-│   │   ├── VisaTransformableDTO.java
-│   │   ├── DossierCreationDTO.java     # regroupe les 3 étapes du formulaire
-│   │   ├── PieceCommuneDTO.java        # id + statut + fichier
-│   │   └── PieceComplementaireDTO.java
-│   │
-│   ├── service/
-│   │   ├── RefDataService.java         # Charge les listes déroulantes (nationalite, etc.)
-│   │   ├── DemandeurService.java
-│   │   ├── DossierService.java         # Logique métier centrale
-│   │   ├── PieceService.java           # Upload + mise à jour statut
-│   │   └── FileStorageService.java     # Enregistre physiquement les fichiers
-│   │
-│   └── controller/
-│       ├── RefDataController.java      # GET /api/ref/** (listes)
-│       ├── DemandeurController.java    # POST /api/demandeurs
-│       ├── DossierController.java      # CRUD dossier + changement statut
-│       └── PieceController.java        # Upload pièces
-│
-├── src/main/resources/
-│   ├── application.properties          # DB, upload path, port
-│   └── db/
-│       └── schema_v2.sql               # Script SQL complet
-│
-└── pom.xml
-```
+## 3. Gestion des demandes
+- [ ] Créer une demande de transformation (VISA → Carte résident)
+- [ ] Créer une demande de duplicata (perte de carte)
+- [ ] Créer une demande de transfert de VISA
+- [ ] Créer une demande de transfert de carte
+- [ ] Mentionner "sans donné intérieur" si les données internes ne sont pas disponibles
+- [ ] Changer le statut d'une demande (en_attente, validée, rejetée, en_cours, annulée)
+- [ ] Lister les demandes en attente
+- [ ] Consulter l'historique des demandes d'une personne
 
-## DÉPENDANCES pom.xml (essentielles)
+## 4. Gestion des cartes résident
+- [ ] Générer une carte résident après validation d'une demande de transformation
+- [ ] Attribuer un numéro de carte unique
+- [ ] Définir la date d'expiration (ex: +2 ans)
+- [ ] Changer le statut d'une carte (actif, expiré, suspendu, perdu, en_transfert, renouvelé)
+- [ ] Faire un duplicata en cas de perte (sans VISA car la personne a encore son VISA)
+- [ ] Transférer une carte
+- [ ] Lister les cartes expirant dans 30 jours
 
-```xml
-<!-- Spring Web (REST Controllers) -->
-<dependency>
-  <groupId>org.springframework.boot</groupId>
-  <artifactId>spring-boot-starter-web</artifactId>
-</dependency>
+## 5. Référentiels (statuts et listes déroulantes)
+- [ ] Gérer les statuts VISA (valide, expiré, transformé, annulé, en_cours_transfert)
+- [ ] Gérer les statuts carte résident (actif, expiré, suspendu, perdu, transfert, renouvelé)
+- [ ] Gérer les statuts demande (en_attente, en_cours, validée, rejetée, annulée)
+- [ ] Gérer les types de demande (transformation, duplicata, transfert_visa, transfert_carte)
+- [ ] Gérer les types de VISA/carte (travailleur, investisseur)
+- [ ] Gérer les nationalités
+- [ ] Gérer les professions
+- [ ] Gérer les situations familiales
 
-<!-- Spring Data JPA -->
-<dependency>
-  <groupId>org.springframework.boot</groupId>
-  <artifactId>spring-boot-starter-data-jpa</artifactId>
-</dependency>
+## 6. Suivi et historique
+- [ ] Tracer tous les changements de statut (VISA, carte, demande)
+- [ ] Afficher l'historique des actions pour une entité donnée
+- [ ] Savoir qui a traité une demande (traité_par)
 
-<!-- Driver PostgreSQL -->
-<dependency>
-  <groupId>org.postgresql</groupId>
-  <artifactId>postgresql</artifactId>
-</dependency>
+## 7. Règles métier à implémenter
+- [ ] Un VISA transformable ne peut être transformé qu'une seule fois
+- [ ] Une demande de duplicata nécessite une carte existante avec statut "perdu"
+- [ ] Un transfert crée une nouvelle entité et désactive l'ancienne
+- [ ] Une demande sans "donné intérieur" doit être clairement identifiée
+- [ ] Seuls les types travailleurs et investisseurs sont gérés (pas étudiants)
 
-<!-- Lombok (évite les getters/setters manuels) -->
-<dependency>
-  <groupId>org.projectlombok</groupId>
-  <artifactId>lombok</artifactId>
-  <optional>true</optional>
-</dependency>
+## 8. API (backend) - Endpoints nécessaires
+- [ ] CRUD complet pour Personne
+- [ ] CRUD complet pour VISA
+- [ ] CRUD complet pour Demande
+- [ ] CRUD complet pour Carte résident
+- [ ] Endpoints pour Duplicata, Transfert VISA, Transfert carte
+- [ ] Endpoints pour tous les référentiels (statuts, types, nationalités...)
+- [ ] Endpoint de recherche multi-critères
 
-<!-- Validation (@NotBlank, @NotNull sur les DTO) -->
-<dependency>
-  <groupId>org.springframework.boot</groupId>
-  <artifactId>spring-boot-starter-validation</artifactId>
-</dependency>
-```
+## 9. APK Android - Écrans
+- [ ] Écran d'accueil (menu principal)
+- [ ] Écran de saisie personne + photo
+- [ ] Écran de saisie VISA
+- [ ] Écran de création de demande (avec case "sans donné intérieur")
+- [ ] Écran de recherche
+- [ ] Écran détail personne (avec onglets : infos, VISA, demandes, cartes)
+- [ ] Écran liste des demandes en attente
+- [ ] Écran liste des cartes expirant
+- [ ] Écran de validation/traitement d'une demande
+- [ ] Écran de gestion des référentiels (admin)
 
-## application.properties
-
-```properties
-# Base de données
-spring.datasource.url=jdbc:postgresql://localhost:5432/titre_sejour_db
-spring.datasource.username=postgres
-spring.datasource.password=yourpassword
-
-# JPA — ne recrée pas le schéma (on utilise schema_v2.sql)
-spring.jpa.hibernate.ddl-auto=validate
-spring.jpa.show-sql=true
-
-# Upload fichiers
-spring.servlet.multipart.max-file-size=10MB
-spring.servlet.multipart.max-request-size=30MB
-file.upload-dir=/var/titresejour/uploads
-```
-
-## ENDPOINTS REST PAR SPRINT
-
-```
-SPRINT 1 — Formulaire nouveau titre
-  GET  /api/ref/nationalites
-  GET  /api/ref/situations-familiales
-  GET  /api/ref/types-identite
-  POST /api/demandeurs                      ← étape 1 : état civil
-  POST /api/passeports                      ← étape 2 : passeport
-  POST /api/visas                           ← étape 2 : visa transformable
-  POST /api/dossiers                        ← étape 3 : crée le dossier complet
-  GET  /api/dossiers/{id}/pieces            ← checklist pièces du dossier
-
-SPRINT 2 — Récupération dossier existant
-  GET  /api/dossiers/{id}                   ← charger un dossier
-  GET  /api/demandeurs/{id}                 ← charger un demandeur existant
-  PUT  /api/dossiers/{id}                   ← modifier un dossier
-
-SPRINT 3 — Validation et upload
-  POST /api/dossiers/{id}/pieces/communes/{pieceId}/upload
-  POST /api/dossiers/{id}/pieces/complementaires/{pieceId}/upload
-  GET  /api/dossiers/{id}/completude        ← vérifie si toutes les pièces sont fournies
-  PUT  /api/dossiers/{id}/statut            ← passe à APPROUVE ou REJETE
-```
-
-## TODO LISTE — 3 SPRINTS
-
-### SPRINT 1 — Formulaire nouveau titre (création complète)
-
-**Objectif :** Un agent remplit le formulaire étape par étape et crée le dossier.
-
-#### Backend
-
-- [ ] Créer le projet Spring Boot (Spring Initializr)
-- [ ] Configurer `application.properties` (DB + upload)
-- [ ] Exécuter `schema_v2.sql` sur PostgreSQL
-- [ ] Créer toutes les `@Entity` (entity/)
-- [ ] Créer tous les `JpaRepository` (repository/)
-- [ ] `RefDataController` — exposer les listes déroulantes
-  - GET nationalités, situations familiales, types d'identité
-- [ ] `DemandeurService` + `DemandeurController`
-  - POST /api/demandeurs → enregistre l'état civil
-- [ ] `PasseportService` + endpoints passeport
-  - POST /api/passeports → lié au demandeur
-- [ ] `VisaTransformableService` + endpoints visa
-  - POST /api/visas → lié au passeport
-- [ ] `DossierService` — méthode `creerDossier()`
-  - POST /api/dossiers → crée dossier + initialise toutes les pièces à NON_FOURNI
-- [ ] `DossierRepository` — méthode `findPiecesParDossier(id)`
-
-#### Frontend (si applicable)
-
-- [ ] Étape 1 : formulaire état civil (nom, prénom, nationalité, situation familiale…)
-- [ ] Étape 2 : formulaire passeport + visa transformable
-- [ ] Étape 3 : sélection type d'identité + affichage checklist pièces
-- [ ] Bouton "Suivant" entre chaque étape (validation des champs requis)
-- [ ] Confirmation de création du dossier
-
-
-**A respecter :** 
-- Demandeur correspond a une table dans la bdd
-- Visa transformable correspond a une table dans la bdd
-- Passport transformable correspond a une table dans la bdd
-- Demande transformable correspond a une table dans la bdd
-- Type demande transformable correspond a une table dans la bdd
-    - nouveau titre
-    - transfert visa
-    - ...
-- Type Visa transformable correspond a une table dans la bdd
-    - investisseur
-    - travailleur
-- Status demande correspond a une table dans la bdd
-    - Crée
-    - Appprouvée
-    - Rejetée
-- Historique status demande correspond a une table dans la bdd
-- Situation familliale / sexe / nationnalite correspond a une table dans la bdd (type objet)
-- Visa correspond a une table dans la bdd (id_demande)
-- Carte resident demande correspond a une table dans la bdd
-
----
-
-### SPRINT 2 — Duplicata (visa ou carte de résident perdu, sans historique système)
-
-**Contexte :**
-Le demandeur possédait un visa ou une carte de résident délivré dans l'ancien
-système papier. Il l'a perdu ou volé. Le nouveau système n'a aucune trace de
-ce document. Pour reconstruire son dossier, il apporte physiquement les
-photocopies de ses anciens documents (ex: ref, dates).
-L'agent back-office saisit les informations à partir de ces photocopies.
-Le résultat final est une décision manuelle de l'agent : recréer un nouveau
-visa ou une nouvelle carte de résident avec les mêmes informations reconstituées.
-
-
-#### Frontend (si applicable)
-
-* [ ] Étape 1 : même formulaire que Sprint 1 (état civil + passeport + pièces communes
-  et complémentaires selon type) + upload des photocopies justificatives
-* [ ] Étape 2 : saisie du document à récupérer
-  * Choix : Visa ou Carte de résident
-  * Référence (numéro reconstruit depuis la photocopie)
-  * Date début et date fin
-* [ ] Bouton "Soumettre"
-
----
-
-### SPRINT 3 — Upload pièces + validation finale
-
-**Objectif :** L'agent uploade chaque pièce justificative et valide le dossier si complet.
-
-#### Backend
-
-- [ ] `FileStorageService` — enregistre le fichier sur disque, retourne le chemin
-- [ ] `PieceService` — méthode `uploadPiece()`
-  - Reçoit le fichier (MultipartFile)
-  - Enregistre `fichier_path` + passe statut_piece à FOURNI
-  - POST /api/dossiers/{id}/pieces/communes/{pieceId}/upload
-  - POST /api/dossiers/{id}/pieces/complementaires/{pieceId}/upload
-- [ ] `DossierService` — méthode `verifierCompletude(dossierId)`
-  - Retourne true si toutes les pièces obligatoires sont à FOURNI
-  - GET /api/dossiers/{id}/completude
-- [ ] `DossierService` — méthode `changerStatut(dossierId, statut)`
-  - PUT /api/dossiers/{id}/statut → APPROUVE ou REJETE
-  - Bloque la validation si le dossier n'est pas complet
-
-#### Frontend (si applicable)
-
-- [ ] Affichage de la checklist pièces avec statut visuel (✓ / ✗)
-- [ ] Bouton "Choisir fichier" pour chaque pièce
-- [ ] Barre de progression (X / 10 pièces fournies)
-- [ ] Bouton "Valider le dossier" (actif seulement si complet)
-- [ ] Confirmation d'approbation ou formulaire de motif de rejet
+## 10. Livrables finaux
+- [ ] Script SQL complet de la base de données
+- [ ] Documentation API (Swagger ou fichier texte)
+- [ ] Code source APK Android
+- [ ] Guide d'installation et d'utilisation
