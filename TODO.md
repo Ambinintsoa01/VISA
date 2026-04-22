@@ -158,6 +158,7 @@ SPRINT 1 — Formulaire nouveau titre
   GET  /api/ref/nationalites
   GET  /api/ref/situations-familiales
   GET  /api/ref/types-identite
+  POST /api/demandes
   POST /api/demandeurs                      ← étape 1 : état civil
   POST /api/passeports                      ← étape 2 : passeport
   POST /api/visas                           ← étape 2 : visa transformable
@@ -191,6 +192,7 @@ SPRINT 3 — Validation et upload
 - TypeVisa correspond a une table dans la bdd
     - investisseur
     - travailleur
+    - regroupement familial
 - StatusDemande correspond a une table dans la bdd
     - Crée
     - Approuvée    - Rejetée
