@@ -4,7 +4,7 @@ public class VisaTransformableDTO {
     private Long id;
     private Long passeportId;
     private Long typeVisaId;
-    private String infos; // JSON string
+    private Object infos; // can be JSON object or string
     private String remarque;
 
     public VisaTransformableDTO() {}
@@ -18,8 +18,8 @@ public class VisaTransformableDTO {
     public Long getTypeVisaId() { return typeVisaId; }
     public void setTypeVisaId(Long typeVisaId) { this.typeVisaId = typeVisaId; }
 
-    public String getInfos() { return infos; }
-    public void setInfos(String infos) { this.infos = infos; }
+    public Object getInfos() { return infos; }
+    public void setInfos(Object infos) { this.infos = infos; }
 
     public String getRemarque() { return remarque; }
     public void setRemarque(String remarque) { this.remarque = remarque; }
