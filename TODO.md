@@ -9,19 +9,28 @@ titre-sejour-backend/
 │
 ├── src/main/java/mg/visa
 │   │
-│   │
 │   ├── entity/                         # Une classe par table
 │   │   ├── ref/
 │   │   │   ├── StatutDossier.java
 │   │   │   ├── StatutPiece.java
+│   │   │   ├── StatutDemande.java
+│   │   │   ├── HistoriqueStatutDemande.java
 │   │   │   ├── Nationalite.java
 │   │   │   ├── SituationFamiliale.java
 │   │   │   └── TypeIdentite.java
 │   │   │
 │   │   ├── Demandeur.java
 │   │   ├── Passeport.java
+│   │   ├── Visa.java
 │   │   ├── VisaTransformable.java
+│   │   ├── Passeport.java                         # Classe représentant un passeport
+│   │   ├── Visa.java                              # Visa délivré (lié à une `Demande`, champ id_demande)
+│   │   ├── VisaTransformable.java                 # Visa transformable (pré-demande / information distincte)
+│   │   ├── Demande.java
+│   │   ├── TypeDemande.java
+│   │   ├── TypeVisa.java
 │   │   ├── Dossier.java
+│   │   ├── CarteResidentDemande.java
 │   │   ├── CataloguePieceCommune.java
 │   │   ├── CataloguePieceComplementaire.java
 │   │   ├── DossierPieceCommune.java
@@ -31,14 +40,21 @@ titre-sejour-backend/
 │   │   ├── ref/
 │   │   │   ├── StatutDossierRepository.java
 │   │   │   ├── StatutPieceRepository.java
+│   │   │   ├── StatutDemandeRepository.java
+│   │   │   ├── HistoriqueStatutDemandeRepository.java
 │   │   │   ├── NationaliteRepository.java
 │   │   │   ├── SituationFamilialeRepository.java
 │   │   │   └── TypeIdentiteRepository.java
 │   │   │
 │   │   ├── DemandeurRepository.java
 │   │   ├── PasseportRepository.java
+│   │   ├── VisaRepository.java
 │   │   ├── VisaTransformableRepository.java
+│   │   ├── DemandeRepository.java
+│   │   ├── TypeDemandeRepository.java
+│   │   ├── TypeVisaRepository.java
 │   │   ├── DossierRepository.java
+│   │   ├── CarteResidentDemandeRepository.java
 │   │   ├── CataloguePieceCommuneRepository.java
 │   │   ├── CataloguePieceComplementaireRepository.java
 │   │   ├── DossierPieceCommuneRepository.java
@@ -47,14 +63,20 @@ titre-sejour-backend/
 │   ├── dto/                            # Objets de transfert (pas d'entity dans le front)
 │   │   ├── DemandeurDTO.java           # état civil complet
 │   │   ├── PasseportDTO.java
+│   │   ├── VisaDTO.java
 │   │   ├── VisaTransformableDTO.java
+│   │   ├── DemandeDTO.java
 │   │   ├── DossierCreationDTO.java     # regroupe les 3 étapes du formulaire
 │   │   ├── PieceCommuneDTO.java        # id + statut + fichier
 │   │   └── PieceComplementaireDTO.java
 │   │
 │   ├── service/
-│   │   ├── RefDataService.java         # Charge les listes déroulantes (nationalite, etc.)
+│   │   ├── RefDataService.java         # Charge les listes déroulantes(nationalite, etc.)
 │   │   ├── DemandeurService.java
+│   │   ├── PasseportService.java
+│   │   ├── VisaService.java
+│   │   ├── VisaTransformableService.java
+│   │   ├── DemandeService.java
 │   │   ├── DossierService.java         # Logique métier centrale
 │   │   ├── PieceService.java           # Upload + mise à jour statut
 │   │   └── FileStorageService.java     # Enregistre physiquement les fichiers
@@ -62,6 +84,9 @@ titre-sejour-backend/
 │   └── controller/
 │       ├── RefDataController.java      # GET /api/ref/** (listes)
 │       ├── DemandeurController.java    # POST /api/demandeurs
+│       ├── PasseportController.java    # endpoints passeport
+│       ├── VisaController.java         # endpoints visa
+│       ├── DemandeController.java      # CRUD demande/dossier
 │       ├── DossierController.java      # CRUD dossier + changement statut
 │       └── PieceController.java        # Upload pièces
 │
@@ -112,7 +137,7 @@ titre-sejour-backend/
 
 ```properties
 # Base de données
-spring.datasource.url=jdbc:postgresql://localhost:5432/titre_sejour_db
+spring.datasource.url=jdbc:postgresql://localhost:5432/visa
 spring.datasource.username=postgres
 spring.datasource.password=yourpassword
 
@@ -151,6 +176,29 @@ SPRINT 3 — Validation et upload
   PUT  /api/dossiers/{id}/statut            ← passe à APPROUVE ou REJETE
 ```
 
+
+## A respecter :
+
+- **Remarque importante :** `Visa` ≠ `VisaTransformable`. `Visa` représente un visa délivré (lié à une `Demande` via `id_demande`). `VisaTransformable` est une entité distincte pour les cas de transformation/transition (données préalables au visa délivré).
+- Demandeur correspond a une table dans la bdd
+- VisaTransformable correspond a une table dans la bdd
+- Passeport correspond a une table dans la bdd
+- Demande correspond a une table dans la bdd
+- TypeDemande correspond a une table dans la bdd
+    - nouveau titre
+    - transfert visa
+    - ...
+- TypeVisa correspond a une table dans la bdd
+    - investisseur
+    - travailleur
+- StatusDemande correspond a une table dans la bdd
+    - Crée
+    - Approuvée    - Rejetée
+- HistoriqueStatusDemande correspond a une table dans la bdd
+- SituationFamiliale / sexe / nationalite / typeIdentite correspond a une table dans la bdd (type objet)
+- Visa correspond a une table dans la bdd (id_demande)
+- CarteResidentDemande correspond a une table dans la bdd
+
 ## TODO LISTE — 3 SPRINTS
 
 ### SPRINT 1 — Formulaire nouveau titre (création complète)
@@ -183,28 +231,6 @@ SPRINT 3 — Validation et upload
 - [ ] Étape 3 : sélection type d'identité + affichage checklist pièces
 - [ ] Bouton "Suivant" entre chaque étape (validation des champs requis)
 - [ ] Confirmation de création du dossier
-
-
-**A respecter :** 
-- Demandeur correspond a une table dans la bdd
-- Visa transformable correspond a une table dans la bdd
-- Passport transformable correspond a une table dans la bdd
-- Demande transformable correspond a une table dans la bdd
-- Type demande transformable correspond a une table dans la bdd
-    - nouveau titre
-    - transfert visa
-    - ...
-- Type Visa transformable correspond a une table dans la bdd
-    - investisseur
-    - travailleur
-- Status demande correspond a une table dans la bdd
-    - Crée
-    - Appprouvée
-    - Rejetée
-- Historique status demande correspond a une table dans la bdd
-- Situation familliale / sexe / nationnalite correspond a une table dans la bdd (type objet)
-- Visa correspond a une table dans la bdd (id_demande)
-- Carte resident demande correspond a une table dans la bdd
 
 ---
 
