@@ -1,11 +1,11 @@
 # 📋 TODO - Fonctionnalités du projet VISA Transformable
 
 ## 1. Gestion des personnes (état civil)
-- [ ] Saisir une nouvelle personne (nom, nom jeune fille, date/lieu naissance, situation familiale, nationalité, profession, adresse, contact, email)
-- [ ] Ajouter une photo de la personne
-- [ ] Rechercher une personne (par nom, email, numéro VISA, numéro carte)
-- [ ] Modifier les informations d'une personne
-- [ ] Consulter le détail d'une personne
+- [x] Saisir une nouvelle personne (nom, nom jeune fille, date/lieu naissance, situation familiale, nationalité, profession, adresse, contact, email)
+- [x] Ajouter une photo de la personne
+- [x] Rechercher une personne (par nom, email, numéro VISA, numéro carte)
+- [x] Modifier les informations d'une personne
+- [x] Consulter le détail d'une personne
 
 ## 2. Gestion des VISA
 - [x] Enregistrer un VISA pour une personne (numéro VISA, date entrée, date fin, statut travailleur/investisseur)
@@ -25,13 +25,13 @@
 - [x] Consulter l'historique des demandes d'une personne
 
 ## 4. Gestion des cartes résident
-- [ ] Générer une carte résident après validation d'une demande de transformation
-- [ ] Attribuer un numéro de carte unique
-- [ ] Définir la date d'expiration (ex: +2 ans)
-- [ ] Changer le statut d'une carte (actif, expiré, suspendu, perdu, en_transfert, renouvelé)
-- [ ] Faire un duplicata en cas de perte (sans VISA car la personne a encore son VISA)
-- [ ] Transférer une carte
-- [ ] Lister les cartes expirant dans 30 jours
+- [x] Générer une carte résident après validation d'une demande de transformation
+- [x] Attribuer un numéro de carte unique
+- [x] Définir la date d'expiration (ex: +2 ans)
+- [x] Changer le statut d'une carte (actif, expiré, suspendu, perdu, en_transfert, renouvelé)
+- [x] Faire un duplicata en cas de perte (sans VISA car la personne a encore son VISA)
+- [x] Transférer une carte
+- [x] Lister les cartes expirant dans 30 jours
 
 ## 5. Référentiels (statuts et listes déroulantes)
 - [ ] Gérer les statuts VISA (valide, expiré, transformé, annulé, en_cours_transfert)
@@ -50,17 +50,17 @@
 
 ## 7. Règles métier à implémenter
 - [ ] Un VISA transformable ne peut être transformé qu'une seule fois
-- [ ] Une demande de duplicata nécessite une carte existante avec statut "perdu"
-- [ ] Un transfert crée une nouvelle entité et désactive l'ancienne
+- [x] Une demande de duplicata nécessite une carte existante avec statut "perdu"
+- [x] Un transfert crée une nouvelle entité et désactive l'ancienne
 - [ ] Une demande sans "donné intérieur" doit être clairement identifiée
 - [ ] Seuls les types travailleurs et investisseurs sont gérés (pas étudiants)
 
 ## 8. API (backend) - Endpoints nécessaires
-- [ ] CRUD complet pour Personne
+- [x] CRUD complet pour Personne
 - [x] CRUD complet pour VISA
 - [x] CRUD complet pour Demande
-- [ ] CRUD complet pour Carte résident
-- [ ] Endpoints pour Duplicata, Transfert VISA, Transfert carte
+- [x] CRUD complet pour Carte résident
+- [x] Endpoints pour Duplicata, Transfert VISA, Transfert carte
 - [ ] Endpoints pour tous les référentiels (statuts, types, nationalités...)
 - [ ] Endpoint de recherche multi-critères
 
