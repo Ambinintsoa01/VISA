@@ -1,0 +1,57 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Réservations — Back-Office</title>
+    <th:block th:replace="~{fragments/sidebar :: sidebarStyles}"></th:block>
+</head>
+<body>
+
+<th:block th:replace="~{fragments/sidebar :: sidebar}"></th:block>
+
+<main class="main-content">
+    <div class="page-title">📋 Réservations</div>
+    <div class="page-subtitle">Gestion des réservations de navettes aéroport → hôtel</div>
+
+    <div class="content-card">
+        <!-- Barre d'actions + filtre -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
+            <form method="get" th:action="@{/reservations}" style="display:flex; align-items:center; gap:8px;">
+                <label for="date" style="font-size:0.85rem; font-weight:600; color:#374151; white-space:nowrap;">Filtrer par date :</label>
+                <input type="date" id="date" name="date" th:value="${filterDate}"
+                       style="padding:7px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:0.85rem; outline:none;">
+                <button type="submit" class="btn-action btn-primary-action">🔍 Rechercher</button>
+                <a th:href="@{/reservations}" class="btn-action btn-secondary-action">✕ Effacer</a>
+            </form>
+            <a th:href="@{/reservations/new}" class="btn-action btn-primary-action">+ Nouvelle réservation</a>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>ID Client</th>
+                    <th>Nb Passagers</th>
+                    <th>Date / Heure</th>
+                    <th>Hôtel</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="r : ${reservations}">
+                    <td th:text="${r.id}"></td>
+                    <td th:text="${r.idClient}"></td>
+                    <td th:text="${r.nbPassager}"></td>
+                    <td th:text="${#temporals.format(r.dateHeure, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${r.hotel.nom}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(reservations)}">
+                    <td colspan="5" style="text-align:center; color:#9ca3af; padding:32px;">Aucune réservation trouvée.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+</body>
+</html>
