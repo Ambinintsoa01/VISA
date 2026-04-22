@@ -15,14 +15,14 @@
 - [x] Consulter l'historique des VISA d'une personne
 
 ## 3. Gestion des demandes
-- [ ] Créer une demande de transformation (VISA → Carte résident)
-- [ ] Créer une demande de duplicata (perte de carte)
-- [ ] Créer une demande de transfert de VISA
-- [ ] Créer une demande de transfert de carte
-- [ ] Mentionner "sans donné intérieur" si les données internes ne sont pas disponibles
-- [ ] Changer le statut d'une demande (en_attente, validée, rejetée, en_cours, annulée)
-- [ ] Lister les demandes en attente
-- [ ] Consulter l'historique des demandes d'une personne
+- [x] Créer une demande de transformation (VISA → Carte résident)
+- [x] Créer une demande de duplicata (perte de carte)
+- [x] Créer une demande de transfert de VISA
+- [x] Créer une demande de transfert de carte
+- [x] Mentionner "sans donné intérieur" si les données internes ne sont pas disponibles
+- [x] Changer le statut d'une demande (en_attente, validée, rejetée, en_cours, annulée)
+- [x] Lister les demandes en attente
+- [x] Consulter l'historique des demandes d'une personne
 
 ## 4. Gestion des cartes résident
 - [ ] Générer une carte résident après validation d'une demande de transformation
@@ -58,7 +58,7 @@
 ## 8. API (backend) - Endpoints nécessaires
 - [ ] CRUD complet pour Personne
 - [x] CRUD complet pour VISA
-- [ ] CRUD complet pour Demande
+- [x] CRUD complet pour Demande
 - [ ] CRUD complet pour Carte résident
 - [ ] Endpoints pour Duplicata, Transfert VISA, Transfert carte
 - [ ] Endpoints pour tous les référentiels (statuts, types, nationalités...)
