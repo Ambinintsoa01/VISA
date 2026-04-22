@@ -8,11 +8,11 @@
 - [ ] Consulter le détail d'une personne
 
 ## 2. Gestion des VISA
-- [ ] Enregistrer un VISA pour une personne (numéro VISA, date entrée, date fin, statut travailleur/investisseur)
-- [ ] Marquer un VISA comme "transformable" (VISA T)
-- [ ] Marquer un VISA comme "connu intérieur"
-- [ ] Transférer un VISA
-- [ ] Consulter l'historique des VISA d'une personne
+- [x] Enregistrer un VISA pour une personne (numéro VISA, date entrée, date fin, statut travailleur/investisseur)
+- [x] Marquer un VISA comme "transformable" (VISA T)
+- [x] Marquer un VISA comme "connu intérieur"
+- [x] Transférer un VISA
+- [x] Consulter l'historique des VISA d'une personne
 
 ## 3. Gestion des demandes
 - [ ] Créer une demande de transformation (VISA → Carte résident)
@@ -57,7 +57,7 @@
 
 ## 8. API (backend) - Endpoints nécessaires
 - [ ] CRUD complet pour Personne
-- [ ] CRUD complet pour VISA
+- [x] CRUD complet pour VISA
 - [ ] CRUD complet pour Demande
 - [ ] CRUD complet pour Carte résident
 - [ ] Endpoints pour Duplicata, Transfert VISA, Transfert carte
