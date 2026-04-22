@@ -294,6 +294,28 @@ public class CarteResidentRepository {
         }
     }
 
+    public String findTypeCarteCodeById(Integer idTypeCarte) {
+        if (idTypeCarte == null) {
+            return null;
+        }
+
+        String sql = "SELECT code FROM type_carte_ref WHERE id_type_carte = ?";
+
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, idTypeCarte);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString(1);
+                }
+                return null;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors de la recherche code type carte id=" + idTypeCarte, e);
+        }
+    }
+
     public Optional<DemandeInfo> findDemandeInfo(Long idDemande) {
         String sql = """
                 SELECT d.id_personne,

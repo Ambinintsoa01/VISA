@@ -49,11 +49,11 @@
 - [ ] Savoir qui a traité une demande (traité_par)
 
 ## 7. Règles métier à implémenter
-- [ ] Un VISA transformable ne peut être transformé qu'une seule fois
+- [x] Un VISA transformable ne peut être transformé qu'une seule fois
 - [x] Une demande de duplicata nécessite une carte existante avec statut "perdu"
 - [x] Un transfert crée une nouvelle entité et désactive l'ancienne
-- [ ] Une demande sans "donné intérieur" doit être clairement identifiée
-- [ ] Seuls les types travailleurs et investisseurs sont gérés (pas étudiants)
+- [x] Une demande sans "donné intérieur" doit être clairement identifiée
+- [x] Seuls les types travailleurs et investisseurs sont gérés (pas étudiants)
 
 ## 8. API (backend) - Endpoints nécessaires
 - [x] CRUD complet pour Personne

@@ -2,12 +2,15 @@ package com.s5.framework.dev.services;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 import com.s5.framework.dev.models.CarteResident;
 import com.s5.framework.dev.repositories.CarteResidentRepository;
 import com.s5.framework.dev.repositories.CarteResidentRepository.DemandeInfo;
 
 public class CarteResidentService {
+
+    private static final Set<String> ALLOWED_TYPE_CODES = Set.of("travailleur", "investisseur");
 
     private final CarteResidentRepository carteRepository;
 
@@ -251,8 +254,21 @@ public class CarteResidentService {
         if (carte.getIdTypeCarte() == null) {
             throw new IllegalArgumentException("Le champ idTypeCarte est obligatoire");
         }
+        validateAllowedTypeCarte(carte.getIdTypeCarte());
+
         if (carte.getIdStatutCarte() == null) {
             throw new IllegalArgumentException("Le champ idStatutCarte est obligatoire");
+        }
+    }
+
+    private void validateAllowedTypeCarte(Integer idTypeCarte) {
+        String code = carteRepository.findTypeCarteCodeById(idTypeCarte);
+        if (code == null) {
+            throw new IllegalArgumentException("Type de carte introuvable: id=" + idTypeCarte);
+        }
+
+        if (!ALLOWED_TYPE_CODES.contains(code.trim().toLowerCase())) {
+            throw new IllegalArgumentException("Seuls les types travailleur et investisseur sont autorises");
         }
     }
 

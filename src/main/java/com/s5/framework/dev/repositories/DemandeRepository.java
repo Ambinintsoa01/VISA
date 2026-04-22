@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -181,6 +180,91 @@ public class DemandeRepository {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Erreur lors de la recherche type demande code=" + code, e);
+        }
+    }
+
+    public String findTypeDemandeCodeById(Integer idTypeDemande) {
+        if (idTypeDemande == null) {
+            return null;
+        }
+
+        String sql = "SELECT code FROM type_demande_ref WHERE id_type_demande = ?";
+
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, idTypeDemande);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString(1);
+                }
+                return null;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors de la recherche type demande id=" + idTypeDemande, e);
+        }
+    }
+
+    public String findTypeVisaVouluCodeById(Integer idTypeVisaVoulu) {
+        if (idTypeVisaVoulu == null) {
+            return null;
+        }
+
+        String sql = "SELECT code FROM type_visa_voulu_ref WHERE id_type_visa_voulu = ?";
+
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, idTypeVisaVoulu);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString(1);
+                }
+                return null;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors de la recherche type visa voulu id=" + idTypeVisaVoulu, e);
+        }
+    }
+
+    public Boolean isVisaTransformable(Long idVisa) {
+        String sql = "SELECT est_transformable FROM visa WHERE id_visa = ?";
+
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setLong(1, idVisa);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+                boolean value = rs.getBoolean(1);
+                return rs.wasNull() ? Boolean.FALSE : value;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors de la lecture transformable du visa id=" + idVisa, e);
+        }
+    }
+
+    public boolean hasTransformationDemandeForVisa(Long idVisaOriginal) {
+        String sql = """
+                SELECT 1
+                FROM demande d
+                JOIN type_demande_ref td ON td.id_type_demande = d.id_type_demande
+                WHERE d.id_visa_original = ?
+                  AND LOWER(td.code) = LOWER('transformation')
+                LIMIT 1
+                """;
+
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setLong(1, idVisaOriginal);
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors de la verification des transformations du visa", e);
         }
     }
 
