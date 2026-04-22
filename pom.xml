@@ -11,12 +11,12 @@
   </parent>
 
   <groupId>com.s5.framework.dev</groupId>
-  <artifactId>backoffice</artifactId>
+  <artifactId>visa</artifactId>
   <version>1.0.0</version>
   <packaging>war</packaging>
 
-  <name>Backoffice</name>
-  <description>Backoffice project for framework dev</description>
+  <name>Visa</name>
+  <description>Control du visa</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -24,6 +24,13 @@
   </properties>
 
   <dependencies>
+    <!-- Flame core (install locally with mvn install:install-file) -->
+    <dependency>
+      <groupId>com.jakarta</groupId>
+      <artifactId>flame-core</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+
     <!-- Spring Boot Starter Web -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
