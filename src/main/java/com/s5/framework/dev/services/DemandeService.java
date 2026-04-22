@@ -1,11 +1,15 @@
 package com.s5.framework.dev.services;
 
 import java.util.List;
+import java.util.Set;
 
 import com.s5.framework.dev.models.Demande;
 import com.s5.framework.dev.repositories.DemandeRepository;
 
 public class DemandeService {
+
+    private static final Set<String> ALLOWED_TYPE_CODES = Set.of("travailleur", "investisseur");
+    private static final String SANS_DONNE_INTERIEUR_MARKER = "SANS_DONNE_INTERIEUR";
 
     private final DemandeRepository demandeRepository;
 
@@ -36,6 +40,7 @@ public class DemandeService {
 
     public Demande create(Demande demande) {
         validateRequiredFields(demande);
+        applySansDonneInterieurMarker(demande);
         if (demande.getIdStatutDemande() == null) {
             Integer idEnAttente = demandeRepository.findStatutDemandeIdByCode("en_attente");
             demande.setIdStatutDemande(idEnAttente);
@@ -62,6 +67,7 @@ public class DemandeService {
 
     public Demande update(Long id, Demande payload) {
         validateRequiredFields(payload);
+        applySansDonneInterieurMarker(payload);
 
         Demande existing = demandeRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Demande introuvable avec id=" + id));
@@ -112,6 +118,10 @@ public class DemandeService {
             throw new IllegalArgumentException("Type de demande inconnu: " + typeCode);
         }
 
+        if ("transformation".equalsIgnoreCase(typeCode)) {
+            enforceTransformationRules(demande);
+        }
+
         demande.setIdTypeDemande(idTypeDemande);
         return create(demande);
     }
@@ -126,6 +136,64 @@ public class DemandeService {
         if (demande.getIdTypeDemande() == null) {
             throw new IllegalArgumentException("Le champ idTypeDemande est obligatoire");
         }
+
+        validateAllowedTypeVisaVoulu(demande.getIdTypeVisaVoulu());
+    }
+
+    private void enforceTransformationRules(Demande demande) {
+        if (demande.getIdVisaOriginal() == null) {
+            throw new IllegalArgumentException("Une demande de transformation exige idVisaOriginal");
+        }
+
+        Boolean transformable = demandeRepository.isVisaTransformable(demande.getIdVisaOriginal());
+        if (transformable == null) {
+            throw new IllegalArgumentException("Visa original introuvable avec id=" + demande.getIdVisaOriginal());
+        }
+        if (!transformable) {
+            throw new IllegalArgumentException("Un VISA non transformable ne peut pas etre transforme");
+        }
+
+        if (demandeRepository.hasTransformationDemandeForVisa(demande.getIdVisaOriginal())) {
+            throw new IllegalArgumentException("Un VISA transformable ne peut etre transforme qu'une seule fois");
+        }
+    }
+
+    private void validateAllowedTypeVisaVoulu(Integer idTypeVisaVoulu) {
+        if (idTypeVisaVoulu == null) {
+            return;
+        }
+
+        String code = demandeRepository.findTypeVisaVouluCodeById(idTypeVisaVoulu);
+        if (code == null) {
+            throw new IllegalArgumentException("Type de visa voulu introuvable: id=" + idTypeVisaVoulu);
+        }
+
+        if (!ALLOWED_TYPE_CODES.contains(code.trim().toLowerCase())) {
+            throw new IllegalArgumentException("Seuls les types travailleur et investisseur sont autorises");
+        }
+    }
+
+    private void applySansDonneInterieurMarker(Demande demande) {
+        boolean sansDonneInterieur = defaultBoolean(demande.getSansDonneInterieur());
+        demande.setSansDonneInterieur(sansDonneInterieur);
+
+        if (!sansDonneInterieur) {
+            return;
+        }
+
+        String motif = normalize(demande.getMotif());
+        if (motif == null) {
+            demande.setMotif(SANS_DONNE_INTERIEUR_MARKER);
+            return;
+        }
+
+        String upperMotif = motif.toUpperCase();
+        if (!upperMotif.contains(SANS_DONNE_INTERIEUR_MARKER)) {
+            demande.setMotif(SANS_DONNE_INTERIEUR_MARKER + " - " + motif);
+            return;
+        }
+
+        demande.setMotif(motif);
     }
 
     private Boolean defaultBoolean(Boolean value) {
