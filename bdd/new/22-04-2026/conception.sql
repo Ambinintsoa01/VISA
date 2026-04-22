@@ -185,6 +185,7 @@ CREATE TABLE catalogue_piece_complementaire (
     libelle VARCHAR(300) NOT NULL,
     obligatoire BOOLEAN DEFAULT false
 );
+ALTER TABLE catalogue_piece_complementaire ADD COLUMN type_visa_id BIGINT REFERENCES type_visa(id); 
 
 -- Pièces attachées au dossier
 CREATE TABLE dossier_piece_commune (
