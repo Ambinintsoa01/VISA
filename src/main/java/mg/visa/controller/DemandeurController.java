@@ -2,6 +2,7 @@ package mg.visa.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,5 +26,10 @@ public class DemandeurController {
     public ResponseEntity<Demandeur> create(@RequestBody DemandeurDTO dto) {
         Demandeur created = demandeurService.createDemandeur(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getAll() {
+        return ResponseEntity.ok(demandeurService.getAllDemandeurs());
     }
 }

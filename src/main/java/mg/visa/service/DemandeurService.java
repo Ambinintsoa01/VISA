@@ -1,5 +1,7 @@
 package mg.visa.service;
 
+import java.util.List;
+
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -63,5 +65,9 @@ public class DemandeurService {
         }
 
         return demandeurRepository.save(d);
+    }
+
+    public List<Demandeur> getAllDemandeurs() {
+        return demandeurRepository.findAll();
     }
 }
