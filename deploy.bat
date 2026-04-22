@@ -11,12 +11,6 @@ echo =========================================
 echo    Deploiement sur Tomcat 10.1
 echo =========================================
 
-REM 1. Arreter Tomcat si en cours
-echo.
-echo [1/5] Arret de Tomcat...
-call "%TOMCAT_HOME%\bin\shutdown.bat" 2>nul
-timeout /t 5 /nobreak >nul
-
 REM 2. Compiler et packager le WAR
 echo.
 echo [2/5] Compilation du projet...
@@ -42,11 +36,6 @@ if %ERRORLEVEL% neq 0 (
     pause
     exit /b 1
 )
-
-REM 5. Demarrer Tomcat
-echo.
-echo [5/5] Demarrage de Tomcat...
-call "%TOMCAT_HOME%\bin\startup.bat"
 
 echo.
 echo =========================================
