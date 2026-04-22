@@ -1,6 +1,9 @@
 package mg.visa.service;
 
 import java.time.OffsetDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -76,5 +79,18 @@ public class PieceService {
 
         dossierPieceComplementaireRepository.save(dpc);
         return path;
+    }
+
+    public Map<String, Object> getPiecesByDossier(Long dossierId) {
+        // verify dossier exists
+        dossierRepository.findById(dossierId).orElseThrow(() -> new IllegalArgumentException("Dossier introuvable"));
+
+        List<DossierPieceCommune> communes = dossierPieceCommuneRepository.findByDossierId(dossierId);
+        List<DossierPieceComplementaire> comps = dossierPieceComplementaireRepository.findByDossierId(dossierId);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("communes", communes);
+        result.put("complementaires", comps);
+        return result;
     }
 }
