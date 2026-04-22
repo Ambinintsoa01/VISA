@@ -1,5 +1,7 @@
 package mg.visa.controller;
 
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,8 +13,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import mg.visa.dto.DossierCreationDTO;
+import mg.visa.dto.DossierCreationResult;
 import mg.visa.dto.StatusChangeDTO;
 import mg.visa.entity.Dossier;
+import mg.visa.exception.MissingPiecesException;
 import mg.visa.service.DossierService;
 
 @RestController
@@ -26,9 +30,16 @@ public class DossierController {
     }
 
     @PostMapping
-    public ResponseEntity<Dossier> create(@RequestBody DossierCreationDTO dto) {
-        Dossier created = dossierService.creerDossier(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    public ResponseEntity<?> create(@RequestBody DossierCreationDTO dto) {
+        try {
+            DossierCreationResult result = dossierService.creerDossier(dto);
+            Map<String, Object> body = java.util.Map.of(
+                "dossier", result.getDossier()
+            );
+            return ResponseEntity.status(HttpStatus.CREATED).body(body);
+        } catch (MissingPiecesException ex) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("missingPieces", ex.getMissingPieces()));
+        }
     }
     
     @GetMapping("/{id}/completude")

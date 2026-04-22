@@ -1,5 +1,6 @@
 package mg.visa.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -8,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import mg.visa.dto.DossierCreationDTO;
+import mg.visa.dto.DossierCreationResult;
 import mg.visa.entity.CataloguePieceCommune;
 import mg.visa.entity.CataloguePieceComplementaire;
 import mg.visa.entity.Demande;
@@ -56,7 +58,7 @@ public class DossierService {
     }
 
     @Transactional
-    public Dossier creerDossier(DossierCreationDTO dto) {
+    public DossierCreationResult creerDossier(DossierCreationDTO dto) {
         if (dto.getDemandeId() == null) throw new ResponseStatusException(BAD_REQUEST, "demandeId requis");
 
         Demande demande = demandeRepository.findById(dto.getDemandeId())
@@ -95,13 +97,39 @@ public class DossierService {
             dossierPieceComplementaireRepository.save(dpc);
         }
 
-        return saved;
+        // Vérifier pièces obligatoires présentes dans le dossier (collecter celles manquantes)
+        List<String> missing = new ArrayList<>();
+
+        // Communes obligatoires
+        List<DossierPieceCommune> dpcCommunes = dossierPieceCommuneRepository.findByDossierId(saved.getId());
+        for (DossierPieceCommune dpc : dpcCommunes) {
+            CataloguePieceCommune cat = dpc.getCataloguePieceCommune();
+            if (Boolean.TRUE.equals(cat.getObligatoire())) {
+                if (dpc.getStatutPiece() == null || dpc.getStatutPiece().getCode() == null || !"FOURNI".equalsIgnoreCase(dpc.getStatutPiece().getCode())) {
+                    missing.add("COMMUNE:" + (cat.getCode() != null ? cat.getCode() : cat.getLibelle()));
+                }
+            }
+        }
+
+        // Complémentaires obligatoires
+        List<DossierPieceComplementaire> dpcComps = dossierPieceComplementaireRepository.findByDossierId(saved.getId());
+        for (DossierPieceComplementaire dpc : dpcComps) {
+            CataloguePieceComplementaire cat = dpc.getCataloguePieceComplementaire();
+            if (Boolean.TRUE.equals(cat.getObligatoire())) {
+                if (dpc.getStatutPiece() == null || dpc.getStatutPiece().getCode() == null || !"FOURNI".equalsIgnoreCase(dpc.getStatutPiece().getCode())) {
+                    missing.add("COMPLEMENTAIRE:" + (cat.getCode() != null ? cat.getCode() : cat.getLibelle()));
+                }
+            }
+        }
+
+        if (!missing.isEmpty()) {
+            throw new mg.visa.exception.MissingPiecesException(missing);
+        }
+
+        return new mg.visa.dto.DossierCreationResult(saved, missing);
     }
 
     public boolean verifierCompletude(Long dossierId) {
-        Dossier dossier = dossierRepository.findById(dossierId)
-                .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "dossier introuvable"));
-
         // Check all mandatory catalogue pieces (commune)
         List<DossierPieceCommune> communes = dossierPieceCommuneRepository.findByDossierId(dossierId);
         for (DossierPieceCommune dpc : communes) {
