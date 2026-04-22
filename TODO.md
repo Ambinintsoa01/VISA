@@ -34,14 +34,14 @@
 - [x] Lister les cartes expirant dans 30 jours
 
 ## 5. Référentiels (statuts et listes déroulantes)
-- [ ] Gérer les statuts VISA (valide, expiré, transformé, annulé, en_cours_transfert)
-- [ ] Gérer les statuts carte résident (actif, expiré, suspendu, perdu, transfert, renouvelé)
-- [ ] Gérer les statuts demande (en_attente, en_cours, validée, rejetée, annulée)
-- [ ] Gérer les types de demande (transformation, duplicata, transfert_visa, transfert_carte)
-- [ ] Gérer les types de VISA/carte (travailleur, investisseur)
-- [ ] Gérer les nationalités
-- [ ] Gérer les professions
-- [ ] Gérer les situations familiales
+- [x] Gérer les statuts VISA (valide, expiré, transformé, annulé, en_cours_transfert)
+- [x] Gérer les statuts carte résident (actif, expiré, suspendu, perdu, transfert, renouvelé)
+- [x] Gérer les statuts demande (en_attente, en_cours, validée, rejetée, annulée)
+- [x] Gérer les types de demande (transformation, duplicata, transfert_visa, transfert_carte)
+- [x] Gérer les types de VISA/carte (travailleur, investisseur)
+- [x] Gérer les nationalités
+- [x] Gérer les professions
+- [x] Gérer les situations familiales
 
 ## 6. Suivi et historique
 - [ ] Tracer tous les changements de statut (VISA, carte, demande)
@@ -61,7 +61,7 @@
 - [x] CRUD complet pour Demande
 - [x] CRUD complet pour Carte résident
 - [x] Endpoints pour Duplicata, Transfert VISA, Transfert carte
-- [ ] Endpoints pour tous les référentiels (statuts, types, nationalités...)
+- [x] Endpoints pour tous les référentiels (statuts, types, nationalités...)
 - [ ] Endpoint de recherche multi-critères
 
 ## 9. APK Android - Écrans
