@@ -62,7 +62,7 @@
 - [x] CRUD complet pour Carte résident
 - [x] Endpoints pour Duplicata, Transfert VISA, Transfert carte
 - [x] Endpoints pour tous les référentiels (statuts, types, nationalités...)
-- [ ] Endpoint de recherche multi-critères
+- [x] Endpoint de recherche multi-critères
 
 ## 9. APK Android - Écrans
 - [ ] Écran d'accueil (menu principal)
