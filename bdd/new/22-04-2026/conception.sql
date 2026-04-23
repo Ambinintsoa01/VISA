@@ -108,9 +108,9 @@ CREATE INDEX idx_vt_typevisa ON visa_transformable (type_visa_id);
 CREATE TABLE demande (
     id BIGSERIAL PRIMARY KEY,
     demandeur_id BIGINT NOT NULL REFERENCES demandeur(id) ON DELETE RESTRICT,
-    passeport_id BIGINT REFERENCES passeport(id),
+    passeport_id BIGINT NOT NULL REFERENCES passeport(id),
     id_visa_transformable BIGINT REFERENCES visa_transformable(id), -- nullable
-    type_demande_id BIGINT REFERENCES type_demande(id),
+    type_demande_id BIGINT NOT NULL REFERENCES type_demande(id),
     statut_demande_id BIGINT REFERENCES statut_demande(id),
     reference_externe VARCHAR(200),
     date_creation TIMESTAMPTZ DEFAULT now(),

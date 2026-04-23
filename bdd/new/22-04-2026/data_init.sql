@@ -69,6 +69,14 @@ SELECT 'EMPLOYEE', 'Employée' WHERE NOT EXISTS (SELECT 1 FROM type_visa WHERE c
 INSERT INTO type_visa (code, libelle)
 SELECT 'FAMILY', 'Regroupement familial' WHERE NOT EXISTS (SELECT 1 FROM type_visa WHERE code='FAMILY');
 
+-- Populate type_demande (idempotent)
+INSERT INTO type_demande (code, libelle)
+SELECT 'INVESTOR', 'Investisseur' WHERE NOT EXISTS (SELECT 1 FROM type_demande WHERE code='INVESTOR');
+INSERT INTO type_demande (code, libelle)
+SELECT 'EMPLOYEE', 'Employée' WHERE NOT EXISTS (SELECT 1 FROM type_demande WHERE code='EMPLOYEE');
+INSERT INTO type_demande (code, libelle)
+SELECT 'FAMILY', 'Regroupement familial' WHERE NOT EXISTS (SELECT 1 FROM type_demande WHERE code='FAMILY');
+
 -- Populate type_identite
 INSERT INTO type_identite (code, libelle)
 SELECT 'CIN','Carte d''Identité Nationale' WHERE NOT EXISTS (SELECT 1 FROM type_identite WHERE code='CIN');
