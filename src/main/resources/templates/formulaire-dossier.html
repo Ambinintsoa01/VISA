@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaire Titre de Séjour - Madagascar</title>
+    <link rel="stylesheet" th:href="@{/css/formulaire-dossier.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5 mb-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <!-- Header -->
+                <div class="header-section mb-5">
+                    <h1 class="text-center">Formulaire de Demande de Titre de Séjour</h1>
+                    <p class="text-center text-muted">République de Madagascar</p>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-container mb-4">
+                    <div class="progress-bar" id="progressBar"></div>
+                    <div class="progress-steps">
+                        <div class="step active" id="step1-indicator">
+                            <span class="step-number">1</span>
+                            <span class="step-label">État Civil</span>
+                        </div>
+                        <div class="step" id="step2-indicator">
+                            <span class="step-number">2</span>
+                            <span class="step-label">Passeport & Visa</span>
+                        </div>
+                        <div class="step" id="step3-indicator">
+                            <span class="step-number">3</span>
+                            <span class="step-label">Pièces Justificatives</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alert Messages -->
+                <div id="alertContainer"></div>
+
+                <!-- Main Form -->
+                <form id="mainForm" novalidate>
+                    <!-- ÉTAPE 1: ÉTAT CIVIL -->
+                    <div class="form-step active" id="step1">
+                        <h3 class="mb-4">Étape 1 : Informations d'État Civil</h3>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="nom" class="form-label">Nom *</label>
+                                    <input type="text" class="form-control" id="nom" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="prenom" class="form-label">Prénom *</label>
+                                    <input type="text" class="form-control" id="prenom" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="sexe" class="form-label">Sexe *</label>
+                                    <select class="form-select" id="sexe" required>
+                                        <option value="">-- Sélectionner --</option>
+                                        <option value="M">Masculin</option>
+                                        <option value="F">Féminin</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="dateNaissance" class="form-label">Date de Naissance *</label>
+                                    <input type="date" class="form-control" id="dateNaissance" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="nationalite" class="form-label">Nationalité *</label>
+                                    <select class="form-select" id="nationalite" required>
+                                        <option value="">-- Chargement... --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="situationFamiliale" class="form-label">Situation Familiale *</label>
+                                    <select class="form-select" id="situationFamiliale" required>
+                                        <option value="">-- Chargement... --</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="lieuNaissance" class="form-label">Lieu de Naissance *</label>
+                                    <input type="text" class="form-control" id="lieuNaissance" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="telephoneContact" class="form-label">Téléphone de Contact *</label>
+                                    <input type="tel" class="form-control" id="telephoneContact" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="adresse" class="form-label">Adresse *</label>
+                            <input type="text" class="form-control" id="adresse" required>
+                        </div>
+                    </div>
+
+                    <!-- ÉTAPE 2: PASSEPORT & VISA -->
+                    <div class="form-step" id="step2">
+                        <h3 class="mb-4">Étape 2 : Passeport et Visa Transformable</h3>
+
+                        <div class="card mb-4">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">Informations du Passeport</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="numeroPasseport" class="form-label">Numéro du Passeport *</label>
+                                            <input type="text" class="form-control" id="numeroPasseport" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="dateEmissionPasseport" class="form-label">Date d'Émission *</label>
+                                            <input type="date" class="form-control" id="dateEmissionPasseport" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="dateExpirationPasseport" class="form-label">Date d'Expiration *</label>
+                                            <input type="date" class="form-control" id="dateExpirationPasseport" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="lieuEmissionPasseport" class="form-label">Lieu d'Émission *</label>
+                                            <input type="text" class="form-control" id="lieuEmissionPasseport" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">Visa Transformable</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="typeVisa" class="form-label">Type de Visa *</label>
+                                            <select class="form-select" id="typeVisa" required>
+                                                <option value="">-- Sélectionner --</option>
+                                                <option value="INVESTISSEUR">Investisseur</option>
+                                                <option value="TRAVAILLEUR">Travailleur</option>
+                                                <option value="REGROUPEMENT_FAMILIAL">Regroupement Familial</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="dateDebutVisa" class="form-label">Date de Début *</label>
+                                            <input type="date" class="form-control" id="dateDebutVisa" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="dateFinVisa" class="form-label">Date de Fin *</label>
+                                            <input type="date" class="form-control" id="dateFinVisa" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="typeIdentite" class="form-label">Type d'Identité *</label>
+                                            <select class="form-select" id="typeIdentite" required>
+                                                <option value="">-- Chargement... --</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ÉTAPE 3: PIÈCES JUSTIFICATIVES -->
+                    <div class="form-step" id="step3">
+                        <h3 class="mb-4">Étape 3 : Pièces Justificatives</h3>
+
+                        <div class="alert alert-info">
+                            <strong>Checklist des pièces requises :</strong>
+                        </div>
+
+                        <div id="piecesList" class="pieces-container">
+                            <div class="text-center">
+                                <p>Chargement des pièces requises...</p>
+                            </div>
+                        </div>
+
+                        <div class="progress-section mt-4">
+                            <div class="progress" style="height: 25px;">
+                                <div id="progressPieces" class="progress-bar" role="progressbar" style="width: 0%">
+                                    <span id="progressPiecesText">0%</span>
+                                </div>
+                            </div>
+                            <p class="mt-2 text-center">
+                                <span id="piecesFournies">0</span> / <span id="piecesTotal">0</span> pièces fournies
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Form Controls -->
+                    <div class="form-controls mt-5">
+                        <button type="button" class="btn btn-secondary" id="btnPrecedent" style="display: none;">
+                            ← Précédent
+                        </button>
+                        <button type="button" class="btn btn-primary" id="btnSuivant">
+                            Suivant →
+                        </button>
+                        <button type="button" class="btn btn-success" id="btnValider" style="display: none;">
+                            ✓ Créer le Dossier
+                        </button>
+                        <button type="reset" class="btn btn-outline-secondary ms-2">
+                            Réinitialiser
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Success Modal -->
+                <div class="modal fade" id="successModal" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title">Succès !</h5>
+                            </div>
+                            <div class="modal-body">
+                                <p>Votre dossier a été créé avec succès.</p>
+                                <p class="mb-0"><strong>Numéro de dossier :</strong> <span id="dossierId"></span></p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary" id="btnCloseSuccess">OK</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/formulaire-dossier.js}"></script>
+</body>
+</html>
