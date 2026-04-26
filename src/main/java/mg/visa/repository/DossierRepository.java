@@ -1,6 +1,7 @@
 package mg.visa.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -9,6 +10,8 @@ import org.springframework.data.repository.query.Param;
 import mg.visa.entity.Dossier;
 
 public interface DossierRepository extends JpaRepository<Dossier, Long> {
+
+    Optional<Dossier> findByDemandeId(Long demandeId);
 
     @Query(value = "SELECT 'COMMUNE' as piece_type, dpc.id as piece_id, dpc.catalogue_piece_commune_id as catalogue_id, dpc.statut_piece_id as statut_id, dpc.fichier_path as fichier_path FROM dossier_piece_commune dpc WHERE dpc.dossier_id = :id "
             + "UNION ALL "
