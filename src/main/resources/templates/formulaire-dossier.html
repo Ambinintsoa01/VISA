@@ -93,13 +93,13 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="nom" class="form-label">Nom *</label>
-                                        <input type="text" class="form-control" id="nom" required>
+                                        <input type="text" class="form-control" id="nom" value="RAKOTO" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="prenom" class="form-label">Prénom *</label>
-                                        <input type="text" class="form-control" id="prenom" required>
+                                        <input type="text" class="form-control" id="prenom" value="ANDRY" required>
                                     </div>
                                 </div>
                             </div>
@@ -118,7 +118,7 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="dateNaissance" class="form-label">Date de Naissance *</label>
-                                        <input type="date" class="form-control" id="dateNaissance" required>
+                                        <input type="date" class="form-control" id="dateNaissance" value="1990-01-01" required>
                                     </div>
                                 </div>
                             </div>
@@ -127,7 +127,7 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="nationalite" class="form-label">Nationalité *</label>
-                                        <select class="form-select" id="nationalite" required>
+                                        <select class="form-select" id="nationalite" value="1" required>
                                             <option value="">-- Chargement... --</option>
                                         </select>
                                     </div>
@@ -135,7 +135,7 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="situationFamiliale" class="form-label">Situation Familiale *</label>
-                                        <select class="form-select" id="situationFamiliale" required>
+                                        <select class="form-select" id="situationFamiliale" value="1" required>
                                             <option value="">-- Chargement... --</option>
                                         </select>
                                     </div>
@@ -146,20 +146,20 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="lieuNaissance" class="form-label">Lieu de Naissance *</label>
-                                        <input type="text" class="form-control" id="lieuNaissance" required>
+                                        <input type="text" class="form-control" id="lieuNaissance" value="ANTANANARIVO" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="telephoneContact" class="form-label">Téléphone de Contact *</label>
-                                        <input type="tel" class="form-control" id="telephoneContact" required>
+                                        <input type="tel" class="form-control" id="telephoneContact" value="034 12 345 67" required>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="mb-3">
                                 <label for="adresse" class="form-label">Adresse *</label>
-                                <input type="text" class="form-control" id="adresse" required>
+                                <input type="text" class="form-control" id="adresse" value="123 Rue de l'Independance" required>
                             </div>
                         </div>
 
@@ -176,13 +176,13 @@
                                         <div class="col-md-6">
                                             <div class="mb-3">
                                                 <label for="numeroPasseport" class="form-label">Numéro du Passeport *</label>
-                                                <input type="text" class="form-control" id="numeroPasseport" required>
+                                                <input type="text" class="form-control" id="numeroPasseport" value="0123456789" required>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="mb-3">
                                                 <label for="dateEmissionPasseport" class="form-label">Date d'Émission *</label>
-                                                <input type="date" class="form-control" id="dateEmissionPasseport" required>
+                                                <input type="date" class="form-control" id="dateEmissionPasseport" value="2020-01-01" required>
                                             </div>
                                         </div>
                                     </div>
@@ -191,13 +191,13 @@
                                         <div class="col-md-6">
                                             <div class="mb-3">
                                                 <label for="dateExpirationPasseport" class="form-label">Date d'Expiration *</label>
-                                                <input type="date" class="form-control" id="dateExpirationPasseport" required>
+                                                <input type="date" class="form-control" id="dateExpirationPasseport" value="2025-01-01" required>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="mb-3">
                                                 <label for="lieuEmissionPasseport" class="form-label">Lieu d'Émission *</label>
-                                                <input type="text" class="form-control" id="lieuEmissionPasseport" required>
+                                                <input type="text" class="form-control" id="lieuEmissionPasseport" value="ANTANANARIVO" required>
                                             </div>
                                         </div>
                                     </div>
@@ -215,31 +215,33 @@
                                                 <label for="typeVisa" class="form-label">Type de Visa *</label>
                                                 <select class="form-select" id="typeVisa" required>
                                                     <option value="">-- Sélectionner --</option>
-                                                    <option value="INVESTISSEUR">Investisseur</option>
-                                                    <option value="TRAVAILLEUR">Travailleur</option>
-                                                    <option value="REGROUPEMENT_FAMILIAL">Regroupement Familial</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="typeDemande" class="form-label">Type de demande *</label>
+                                                <select class="form-select" id="typeDemande" required>
+                                                    <option value="">-- Sélectionner --</option>
                                                 </select>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="mb-3">
                                                 <label for="dateDebutVisa" class="form-label">Date de Début *</label>
-                                                <input type="date" class="form-control" id="dateDebutVisa" required>
+                                                <input type="date" class="form-control" id="dateDebutVisa" value="2023-01-01" required>
                                             </div>
                                         </div>
-                                    </div>
-
-                                    <div class="row">
                                         <div class="col-md-6">
                                             <div class="mb-3">
                                                 <label for="dateFinVisa" class="form-label">Date de Fin *</label>
-                                                <input type="date" class="form-control" id="dateFinVisa" required>
+                                                <input type="date" class="form-control" id="dateFinVisa" value="2024-01-01" required>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="mb-3">
                                                 <label for="typeIdentite" class="form-label">Type d'Identité *</label>
-                                                <select class="form-select" id="typeIdentite" required>
+                                                <select class="form-select" id="typeIdentite" value="PASSPORT" required>
                                                     <option value="">-- Chargement... --</option>
                                                 </select>
                                             </div>
@@ -257,22 +259,7 @@
                                 <strong>Checklist des pièces requises :</strong>
                             </div>
 
-                            <div id="piecesList" class="pieces-container">
-                                <div class="text-center">
-                                    <p>Chargement des pièces requises...</p>
-                                </div>
-                            </div>
-
-                            <div class="progress-section mt-4">
-                                <div class="progress" style="height: 25px;">
-                                    <div id="progressPieces" class="progress-bar" role="progressbar" style="width: 0%">
-                                        <span id="progressPiecesText">0%</span>
-                                    </div>
-                                </div>
-                                <p class="mt-2 text-center">
-                                    <span id="piecesFournies">0</span> / <span id="piecesTotal">0</span> pièces fournies
-                                </p>
-                            </div>
+                            <div id="piecesList" class="pieces-container"></div>
                         </div>
 
                         <!-- Form Controls -->
