@@ -8,7 +8,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import mg.visa.entity.ref.Nationalite;
 import mg.visa.entity.ref.SituationFamiliale;
+import mg.visa.entity.ref.TypeDemande;
 import mg.visa.entity.ref.TypeIdentite;
+import mg.visa.entity.ref.TypeVisa;
 import mg.visa.service.RefDataService;
 
 @RestController
@@ -34,5 +36,15 @@ public class RefDataController {
     @GetMapping("/types-identite")
     public List<TypeIdentite> typesIdentite() {
         return refDataService.getTypesIdentite();
+    }
+
+    @GetMapping("/types-visas")
+    public List<TypeVisa> typesVisas() {
+        return refDataService.getTypesVisas();
+    }
+
+    @GetMapping("/types-demandes")
+    public List<TypeDemande> typesDemandes() {
+        return refDataService.getTypesDemandes();
     }
 }
