@@ -158,6 +158,10 @@ SPRINT 1 — Formulaire nouveau titre
   GET  /api/ref/nationalites
   GET  /api/ref/situations-familiales
   GET  /api/ref/types-identite
+  GET  /api/catalogue/communes
+  GET  /api/catalogue/complementaires
+  POST /api/dossiers/{dossierId}/pieces/communes/create (application/json)
+  POST /api/dossiers/{dossierId}/pieces/complementaires/create  (application/json)
   POST /api/demandes
   POST /api/demandeurs                      ← étape 1 : état civil
   POST /api/passeports                      ← étape 2 : passeport
