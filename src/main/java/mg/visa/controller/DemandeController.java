@@ -17,8 +17,8 @@ import mg.visa.entity.ref.TypeDemande;
 import mg.visa.repository.DemandeRepository;
 import mg.visa.repository.DemandeurRepository;
 import mg.visa.repository.PasseportRepository;
-import mg.visa.repository.TypeDemandeRepository;
 import mg.visa.repository.VisaTransformableRepository;
+import mg.visa.repository.ref.TypeDemandeRepository;
 
 @RestController
 @RequestMapping("/api/demandes")
