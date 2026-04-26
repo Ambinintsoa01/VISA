@@ -7,7 +7,11 @@ let formState = {
     demandeurId: null,
     passeportId: null,
     visaTransformableId: null,
+    demandeId: null,
     dossierId: null,
+    selectedCommunes: [],
+    selectedComplementaires: [],
+    apiError: false,
     formData: {
         demandeur: {},
         passeport: {},
@@ -158,15 +162,19 @@ function validateCurrentStep() {
 
 async function loadRefData() {
     try {
-        const [nationalites, situations, typeIdentites] = await Promise.all([
+        const [nationalites, situations, typeIdentites, typeVisas, typeDemandes] = await Promise.all([
             fetch(API_BASE_URL + '/ref/nationalites').then(r => r.json()),
             fetch(API_BASE_URL + '/ref/situations-familiales').then(r => r.json()),
-            fetch(API_BASE_URL + '/ref/types-identite').then(r => r.json())
+            fetch(API_BASE_URL + '/ref/types-identite').then(r => r.json()),
+            fetch(API_BASE_URL + '/ref/types-visas').then(r => r.json()),
+            fetch(API_BASE_URL + '/ref/types-demandes').then(r => r.json())
         ]);
 
         populateSelect('nationalite', nationalites);
         populateSelect('situationFamiliale', situations);
         populateSelect('typeIdentite', typeIdentites);
+        populateSelect('typeVisa', typeVisas);
+        populateSelect('typeDemande', typeDemandes);
     } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
         showAlert('Erreur lors du chargement des listes déroulantes.', 'danger');
@@ -175,6 +183,10 @@ async function loadRefData() {
 
 function populateSelect(selectId, data) {
     const select = document.getElementById(selectId);
+    if (!select) {
+        console.warn('populateSelect: élément introuvable pour id =', selectId);
+        return;
+    }
     select.innerHTML = '<option value="">-- Sélectionner --</option>';
 
     if (Array.isArray(data)) {
@@ -231,6 +243,7 @@ async function saveDemandeur() {
         }
     } catch (error) {
         console.error('❌ Erreur saveDemandeur:', error);
+        formState.apiError = true;
         showAlert('Erreur lors de l\'enregistrement du demandeur: ' + error.message, 'danger');
         throw error;
     }
@@ -292,10 +305,12 @@ async function savePasseportAndVisa() {
         console.log('📝 Collecte données visa...');
         const visaData = {
             passeportId: formState.passeportId,
-            typeVisa: document.getElementById('typeVisa').value,
-            dateDebut: document.getElementById('dateDebutVisa').value,
-            dateFin: document.getElementById('dateFinVisa').value,
-            typeIdentiteId: document.getElementById('typeIdentite').value
+            typeVisaId: document.getElementById('typeVisa').value,
+            infos: {
+                dateDebut: document.getElementById('dateDebutVisa').value,
+                dateFin: document.getElementById('dateFinVisa').value,
+                typeIdentiteId: document.getElementById('typeIdentite').value
+            }
         };
         console.log('Données visa:', visaData);
 
@@ -327,6 +342,7 @@ async function savePasseportAndVisa() {
         showAlert('Passeport et Visa enregistrés.', 'success');
     } catch (error) {
         console.error('❌ Erreur savePasseportAndVisa:', error);
+        formState.apiError = true;
         showAlert('Erreur lors de l\'enregistrement: ' + error.message, 'danger');
         throw error;
     }
@@ -339,164 +355,176 @@ async function savePasseportAndVisa() {
 async function loadPieces() {
     try {
         console.log('=== CHARGEMENT PIÈCES ÉTAPE 3 ===');
-        console.log('formState:', formState);
-        
-        // Vérifier les IDs nécessaires
-        if (!formState.demandeurId) {
-            throw new Error('ID demandeur manquant');
-        }
-        console.log('✓ Demandeur ID:', formState.demandeurId);
-        
-        if (!formState.passeportId) {
-            throw new Error('ID passeport manquant');
-        }
-        console.log('✓ Passeport ID:', formState.passeportId);
-        
-        if (!formState.visaTransformableId) {
-            throw new Error('ID visa manquant');
-        }
-        console.log('✓ Visa ID:', formState.visaTransformableId);
 
-        // D'abord, créer une demande
-        console.log('📝 Création de la demande...');
-        const demandeData = {
-            demandeurId: formState.demandeurId,
-            typeDemandeId: 1 // Valeur par défaut, adapter selon vos données
-        };
-
-        const demandeResponse = await fetch(API_BASE_URL + '/demandes', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(demandeData)
-        });
-
-        if (!demandeResponse.ok) {
-            const errText = await demandeResponse.text();
-            console.error('❌ Erreur création demande HTTP', demandeResponse.status, ':', errText);
-            throw new Error('Erreur création demande: ' + errText);
+        // 1) Charger le catalogue (communes + complémentaires)
+        try {
+            const typeDemandeSelected = document.getElementById('typeDemande')?.value || null;
+            await loadCatalogueByTypeVisa(typeDemandeSelected);
+        } catch (e) {
+            console.warn('Impossible de charger le catalogue:', e);
         }
 
-        const demande = await demandeResponse.json();
-        console.log('✓ Demande créée, ID:', demande.id);
-        
-        if (!demande.id) {
-            throw new Error('Demande créée mais sans ID');
+        // 2) Si un dossier existe déjà, charger ses pièces
+        if (formState.dossierId) {
+            const piecesResponse = await fetch(API_BASE_URL + '/dossiers/' + formState.dossierId + '/pieces');
+            if (!piecesResponse.ok) {
+                const errText = await piecesResponse.text();
+                throw new Error('Erreur chargement pièces: ' + errText);
+            }
+            return;
         }
 
-        // Créer le dossier
-        console.log('📋 Création du dossier...');
-        const dossierData = {
-            demandeId: demande.id,
-            createdBy: 'frontend'
-        };
-
-        if (!dossierData.demandeId) {
-            throw new Error('Demande ID invalide');
+        // 3) Sinon afficher un message neutre
+        const piecesList = document.getElementById('piecesList');
+        if (piecesList) {
+            piecesList.innerHTML = '<p class="text-muted">Sélectionnez les pièces puis cliquez sur « Créer le Dossier ».</p>';
         }
-        console.log('Envoi au serveur:', dossierData);
-
-        const dossierResponse = await fetch(API_BASE_URL + '/dossiers', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dossierData)
-        });
-
-        if (!dossierResponse.ok) {
-            const errText = await dossierResponse.text();
-            console.error('❌ Erreur création dossier HTTP', dossierResponse.status, ':', errText);
-            throw new Error('Erreur création dossier: ' + errText);
-        }
-
-        const dossierRespBody = await dossierResponse.json();
-        console.log('Réponse serveur:', dossierRespBody);
-        
-        const dossier = dossierRespBody.dossier || dossierRespBody;
-        
-        if (!dossier || !dossier.id) {
-            console.error('❌ Réponse dossier invalide:', dossierRespBody);
-            throw new Error('Réponse invalide du serveur: ID dossier manquant');
-        }
-        
-        formState.dossierId = dossier.id;
-        console.log('✓ Dossier créé avec ID:', formState.dossierId);
-
-        // Charger les pièces du dossier
-        console.log('🗂️ Chargement des pièces...');
-        if (!formState.dossierId || formState.dossierId === undefined) {
-            throw new Error('dossierId invalide: ' + formState.dossierId);
-        }
-
-        const piecesResponse = await fetch(API_BASE_URL + '/dossiers/' + formState.dossierId + '/pieces');
-        
-        if (!piecesResponse.ok) {
-            const errText = await piecesResponse.text();
-            console.error('❌ Erreur chargement pièces HTTP', piecesResponse.status, ':', errText);
-            throw new Error('Erreur chargement pièces: ' + errText);
-        }
-
-        const pieces = await piecesResponse.json();
-        console.log('✓ Pièces chargées:', pieces);
-
-        displayPieces(pieces);
-        showAlert('Étape 3: Pièces chargées avec succès!', 'success');
-        
+        updatePiecesProgress([]);
     } catch (error) {
         console.error('❌ ERREUR ÉTAPE 3:', error);
+        formState.apiError = true;
         showAlert('Erreur Étape 3: ' + error.message, 'danger');
     }
 }
 
-function displayPieces(pieces) {
-    const piecesList = document.getElementById('piecesList');
-    piecesList.innerHTML = '';
+function normalizePiecesResponse(piecesResp) {
+    if (Array.isArray(piecesResp)) {
+        return piecesResp;
+    }
+    if (piecesResp && (piecesResp.communes || piecesResp.complementaires)) {
+        return []
+            .concat(piecesResp.communes || [])
+            .concat(piecesResp.complementaires || []);
+    }
+    return [];
+}
 
-    if (!pieces || pieces.length === 0) {
-        piecesList.innerHTML = '<p class="text-muted">Aucune pièce requise.</p>';
-        return;
+async function fetchJsonOrThrow(url, options) {
+    const resp = await fetch(url, options);
+    if (!resp.ok) {
+        const body = await resp.text();
+        throw new Error(body || ('Erreur HTTP ' + resp.status));
+    }
+    const text = await resp.text();
+    if (!text) return null;
+    try {
+        return JSON.parse(text);
+    } catch {
+        return text;
+    }
+}
+
+async function loadCatalogueByTypeVisa(typeDemandeId) {
+    try {
+        const communesPromise = fetch(API_BASE_URL + '/catalogue/communes').then(r => r.ok ? r.json() : []);
+        const complementairesPromise = fetch(API_BASE_URL + '/catalogue/complementaires' + (typeDemandeId ? ('?typeDemandeId=' + encodeURIComponent(typeDemandeId)) : '')).then(r => r.ok ? r.json() : []);
+
+        const [communes, complementaires] = await Promise.all([communesPromise, complementairesPromise]);
+        displayCatalogue(communes, complementaires);
+    } catch (error) {
+        console.error('Erreur chargement catalogue:', error);
+    }
+}
+
+function displayCatalogue(communes, complementaires) {
+    const containerId = 'catalogueContainer';
+    let container = document.getElementById(containerId);
+    if (!container) {
+        // insérer au-dessus de la liste des pièces si possible
+        const piecesList = document.getElementById('piecesList');
+        container = document.createElement('div');
+        container.id = containerId;
+        if (piecesList && piecesList.parentNode) {
+            piecesList.parentNode.insertBefore(container, piecesList);
+        } else {
+            document.body.appendChild(container);
+        }
     }
 
-    const table = document.createElement('div');
-    table.className = 'table-responsive';
+    let html = '<div class="card mb-3"><div class="card-header">Catalogue - Pièces communes</div><div class="card-body">';
+    if (!communes || communes.length === 0) html += '<p class="text-muted">Aucune pièce commune.</p>';
+    else {
+        html += '<ul class="list-group list-group-flush">';
+        communes.forEach(c => {
+            const label = (c.nom || c.libelle || c.code || ('ID ' + c.id));
+            const requiredAttr = c.obligatoire ? ' checked' : '';
+            html += '<li class="list-group-item"><input type="checkbox" class="catalogue-checkbox me-2"' + requiredAttr + ' data-id="' + (c.id || '') + '" data-label="' + (label.replace(/"/g, '\\"')) + '" data-type="commune"/>' + label + '</li>';
+        });
+        html += '</ul>';
+    }
+    html += '</div></div>';
 
-    let html = '<table class="table table-striped">';
-    html += '<thead>';
-    html += '<tr><th>Pièce</th><th>Statut</th><th>Action</th></tr>';
-    html += '</thead><tbody>';
+    html += '<div class="card mb-3"><div class="card-header">Catalogue - Pièces complémentaires</div><div class="card-body">';
+    if (!complementaires || complementaires.length === 0) html += '<p class="text-muted">Aucune pièce complémentaire pour ce type.</p>';
+    else {
+        html += '<ul class="list-group list-group-flush">';
+        complementaires.forEach(c => {
+            const label = (c.nom || c.libelle || c.code || ('ID ' + c.id));
+            const requiredAttr = c.obligatoire ? ' checked' : '';
+            html += '<li class="list-group-item"><input type="checkbox" class="catalogue-checkbox me-2"' + requiredAttr + ' data-id="' + (c.id || '') + '" data-label="' + (label.replace(/"/g, '\\"')) + '" data-type="complementaire"/>' + label + '</li>';
+        });
+        html += '</ul>';
+    }
+    html += '</div></div>';
 
-    pieces.forEach(piece => {
-        const statusBadgeClass = piece.statut === 'FOURNI' ? 'bg-success' : 'bg-warning';
-        const statusLabel = piece.statut === 'FOURNI' ? '✓ Fourni' : '✗ Non fourni';
-        
-        html += '<tr>';
-        html += '<td>' + (piece.nom || piece.libelle || 'Pièce ' + piece.id) + '</td>';
-        html += '<td><span class="badge ' + statusBadgeClass + '">' + statusLabel + '</span></td>';
-        html += '<td>';
-        if (piece.statut !== 'FOURNI') {
-            html += '<button type="button" class="btn btn-sm btn-outline-primary" onclick="uploadPiece(' + piece.id + ', ' + formState.dossierId + ')">Télécharger</button>';
-        }
-        html += '</td>';
-        html += '</tr>';
-    });
+    container.innerHTML = html;
+    // attach a delegated listener to catalogue container to log checked items
+    setupCatalogueCheckboxListeners();
 
-    html += '</tbody></table>';
-    table.innerHTML = html;
-    piecesList.appendChild(table);
+    // Fallback: attach direct listeners to checkboxes in case delegation misses (ensures immediate logging)
+    try {
+        const boxes = container.querySelectorAll('.catalogue-checkbox');
+        boxes.forEach(cb => {
+            cb.removeEventListener('change', onCatalogueChange);
+            cb.addEventListener('change', function(e) {
+                try { console.log('direct checkbox change, id=', cb.getAttribute('data-id'), 'checked=', cb.checked); } catch (err) {}
+                onCatalogueChange();
+            });
+        });
+    } catch (err) {
+        console.warn('Could not attach direct checkbox listeners', err);
+    }
 
-    updatePiecesProgress(pieces);
+    // Synchroniser formState avec les cases pré-cochées (obligatoires)
+    onCatalogueChange();
 }
 
-function updatePiecesProgress(pieces) {
-    const totalPieces = pieces.length;
-    const piecesAffournies = pieces.filter(p => p.statut === 'FOURNI').length;
-    const progressPercent = totalPieces > 0 ? (piecesAffournies / totalPieces) * 100 : 0;
-
-    document.getElementById('progressPieces').style.width = progressPercent + '%';
-    document.getElementById('progressPiecesText').textContent = Math.round(progressPercent) + '%';
-    document.getElementById('piecesFournies').textContent = piecesAffournies;
-    document.getElementById('piecesTotal').textContent = totalPieces;
+function setupCatalogueCheckboxListeners() {
+    const container = document.getElementById('catalogueContainer');
+    if (!container) return;
+    // avoid adding duplicate delegated listener
+    if (!container._catalogueListenerAdded) {
+        const handler = function (e) {
+            const cb = e.target && e.target.closest ? e.target.closest('.catalogue-checkbox') : (e.target && e.target.matches && e.target.matches('.catalogue-checkbox') ? e.target : null);
+            if (cb) {
+                onCatalogueChange();
+            }
+        };
+        container.addEventListener('change', handler);
+        container.addEventListener('click', handler);
+        container._catalogueListenerAdded = true;
+    }
 }
 
-function uploadPiece(pieceId, dossierId) {
+function onCatalogueChange() {
+    const checked = Array.from(document.querySelectorAll('.catalogue-checkbox:checked')).map(cb => ({
+        id: cb.getAttribute('data-id'),
+        label: cb.getAttribute('data-label'),
+        type: cb.getAttribute('data-type')
+    }));
+    console.log('Catalogue checked items:', checked);
+
+    // split by type
+    const communes = checked.filter(i => i.type === 'commune').map(i => Number(i.id));
+    const complementaires = checked.filter(i => i.type === 'complementaire').map(i => Number(i.id));
+
+    // Store selections in formState; actual save will occur when creating the dossier
+    formState.selectedCommunes = communes;
+    formState.selectedComplementaires = complementaires;
+    console.log('Selections stored in formState.selectedCommunes / selectedComplementaires');
+}
+
+function uploadPiece(pieceId, dossierId, type) {
     // Validation des paramètres
     if (!pieceId || pieceId === undefined || pieceId === 'undefined') {
         showAlert('Erreur: ID pièce invalide', 'danger');
@@ -517,7 +545,8 @@ function uploadPiece(pieceId, dossierId) {
         formData.append('file', file);
 
         try {
-            const url = API_BASE_URL + '/dossiers/' + dossierId + '/pieces/communes/' + pieceId + '/upload';
+            const safeType = (type === 'complementaires') ? 'complementaires' : 'communes';
+            const url = API_BASE_URL + '/dossiers/' + dossierId + '/pieces/' + safeType + '/' + pieceId + '/upload';
             console.log('Upload vers:', url);
 
             const response = await fetch(url, {
@@ -530,10 +559,12 @@ function uploadPiece(pieceId, dossierId) {
                 loadPieces(); // Recharger les pièces
             } else {
                 const errText = await response.text();
+                formState.apiError = true;
                 throw new Error('Erreur HTTP ' + response.status + ': ' + errText);
             }
         } catch (error) {
             console.error('Erreur upload:', error);
+            formState.apiError = true;
             showAlert('Erreur lors de l\'upload: ' + error.message, 'danger');
         }
     };
@@ -546,48 +577,102 @@ function uploadPiece(pieceId, dossierId) {
 
 async function submitForm() {
     try {
-        // Valider dossierId
-        if (!formState.dossierId || formState.dossierId === undefined) {
-            showAlert('Erreur: ID dossier invalide. Veuillez créer le dossier d\'abord.', 'danger');
-            return;
+        formState.apiError = false;
+
+        // Toujours synchroniser les sélections avant envoi
+        onCatalogueChange();
+
+        // Vérifier les IDs nécessaires
+        if (!formState.demandeurId) throw new Error('ID demandeur manquant');
+        if (!formState.passeportId) throw new Error('ID passeport manquant');
+        if (!formState.visaTransformableId) throw new Error('ID visa manquant');
+
+        // 1) Créer une demande
+        const demandeData = {
+            demandeurId: formState.demandeurId,
+            passeportId: formState.passeportId,
+            idVisaTransformable: formState.visaTransformableId,
+            typeDemandeId: document.getElementById('typeDemande').value
+        };
+
+        const demandeResponse = await fetch(API_BASE_URL + '/demandes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(demandeData)
+        });
+        if (!demandeResponse.ok) {
+            const errText = await demandeResponse.text();
+            throw new Error('Erreur création demande: ' + errText);
+        }
+        const demande = await demandeResponse.json();
+        if (!demande || !demande.id) throw new Error('Demande créée mais sans ID');
+        formState.demandeId = demande.id;
+
+        // 2) Créer le dossier
+        const dossierResponse = await fetch(API_BASE_URL + '/dossiers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ demandeId: formState.demandeId, createdBy: 'frontend' })
+        });
+        if (!dossierResponse.ok) {
+            const errText = await dossierResponse.text();
+            throw new Error('Erreur création dossier: ' + errText);
+        }
+        const dossierRespBody = await dossierResponse.json();
+        const dossier = dossierRespBody && dossierRespBody.dossier ? dossierRespBody.dossier : dossierRespBody;
+        if (!dossier || !dossier.id) throw new Error('Réponse invalide du serveur: ID dossier manquant');
+        formState.dossierId = dossier.id;
+
+        // 3) Insérer les pièces via les endpoints dédiés (même si liste vide pour forcer la validation backend)
+        const communes = Array.isArray(formState.selectedCommunes) ? formState.selectedCommunes : [];
+        const complementaires = Array.isArray(formState.selectedComplementaires) ? formState.selectedComplementaires : [];
+
+        const communesResp = await fetch(API_BASE_URL + '/dossiers/' + formState.dossierId + '/pieces/communes/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(communes)
+        });
+        if (!communesResp.ok) {
+            const errText = await communesResp.text();
+            throw new Error('Erreur création pièces communes: ' + errText);
         }
 
-        // Vérifier que toutes les pièces sont fournies
-        const completudeResponse = await fetch(API_BASE_URL + '/dossiers/' + formState.dossierId + '/completude');
-        
-        if (!completudeResponse.ok) {
-            const errText = await completudeResponse.text();
-            throw new Error('Erreur vérification complétude: ' + errText);
+        const compResp = await fetch(API_BASE_URL + '/dossiers/' + formState.dossierId + '/pieces/complementaires/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(complementaires)
+        });
+        if (!compResp.ok) {
+            const errText = await compResp.text();
+            throw new Error('Erreur création pièces complémentaires: ' + errText);
         }
 
-        const completudeData = await completudeResponse.json();
-        const isComplete = completudeData.completude === true;
-
-        if (!isComplete) {
-            showAlert('Toutes les pièces justificatives doivent être fournies avant de valider le dossier.', 'warning');
-            return;
-        }
-
-        // Mettre à jour le statut du dossier
-        const updateResponse = await fetch(
-            API_BASE_URL + '/dossiers/' + formState.dossierId + '/statut',
-            {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code: 'APPROUVE' })
-            }
-        );
-
-        if (updateResponse.ok) {
-            showSuccessModal(formState.dossierId);
-        } else {
-            const errText = await updateResponse.text();
-            throw new Error('Erreur lors de la validation du dossier: ' + errText);
-        }
+        // 4) Charger les pièces du dossier et afficher le succès
+        await loadPieces();
+        showSuccessModal(formState.dossierId);
     } catch (error) {
-        console.error('Erreur submitForm:', error);
-        showAlert('Erreur: ' + error.message, 'danger');
+        formState.apiError = true;
+        console.error('❌ Erreur submitForm:', error);
+        showAlert(error.message || 'Erreur lors de la création du dossier', 'danger');
     }
+}
+
+function updatePiecesProgress(pieces) {
+    const totalPieces = Array.isArray(pieces) ? pieces.length : 0;
+    const piecesFournies = Array.isArray(pieces)
+        ? pieces.filter(p => p && p.statutPiece && String(p.statutPiece.code || '').toUpperCase() === 'FOURNI').length
+        : 0;
+    const progressPercent = totalPieces > 0 ? (piecesFournies / totalPieces) * 100 : 0;
+
+    const progressEl = document.getElementById('progressPieces');
+    const progressTextEl = document.getElementById('progressPiecesText');
+    const piecesFourniesEl = document.getElementById('piecesFournies');
+    const piecesTotalEl = document.getElementById('piecesTotal');
+
+    if (progressEl) progressEl.style.width = progressPercent + '%';
+    if (progressTextEl) progressTextEl.textContent = Math.round(progressPercent) + '%';
+    if (piecesFourniesEl) piecesFourniesEl.textContent = piecesFournies;
+    if (piecesTotalEl) piecesTotalEl.textContent = totalPieces;
 }
 
 function resetForm() {
@@ -597,7 +682,11 @@ function resetForm() {
         demandeurId: null,
         passeportId: null,
         visaTransformableId: null,
+        demandeId: null,
         dossierId: null,
+        selectedCommunes: [],
+        selectedComplementaires: [],
+        apiError: false,
         formData: {
             demandeur: {},
             passeport: {},

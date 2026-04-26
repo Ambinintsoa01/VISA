@@ -16,7 +16,6 @@ import mg.visa.dto.DossierCreationDTO;
 import mg.visa.dto.DossierCreationResult;
 import mg.visa.dto.StatusChangeDTO;
 import mg.visa.entity.Dossier;
-import mg.visa.exception.MissingPiecesException;
 import mg.visa.service.DossierService;
 
 @RestController
@@ -31,27 +30,23 @@ public class DossierController {
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody DossierCreationDTO dto) {
-        try {
-            DossierCreationResult result = dossierService.creerDossier(dto);
-            Map<String, Object> body = java.util.Map.of(
-                "dossier", result.getDossier()
-            );
-            return ResponseEntity.status(HttpStatus.CREATED).body(body);
-        } catch (MissingPiecesException ex) {
-            return ResponseEntity.badRequest().body(java.util.Map.of("missingPieces", ex.getMissingPieces()));
-        }
+        DossierCreationResult result = dossierService.creerDossier(dto);
+        Map<String, Object> body = Map.of(
+            "dossier", result.getDossier()
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
     
     @GetMapping("/{id}/completude")
     public ResponseEntity<?> completude(@PathVariable("id") Long id) {
         boolean complete = dossierService.verifierCompletude(id);
-        return ResponseEntity.ok(java.util.Map.of("completude", complete));
+        return ResponseEntity.ok(Map.of("completude", complete));
     }
     
     @PutMapping("/{id}/statut")
     public ResponseEntity<?> changerStatut(@PathVariable("id") Long id, @RequestBody StatusChangeDTO dto) {
         if (dto == null || dto.getCode() == null) {
-            return ResponseEntity.badRequest().body(java.util.Map.of("error", "code requis"));
+            return ResponseEntity.badRequest().body(Map.of("error", "code requis"));
         }
         Dossier updated = dossierService.changerStatut(id, dto.getCode());
         return ResponseEntity.ok(updated);

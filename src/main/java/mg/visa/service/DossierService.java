@@ -2,6 +2,9 @@ package mg.visa.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import org.springframework.stereotype.Service;
@@ -17,7 +20,7 @@ import mg.visa.entity.Dossier;
 import mg.visa.entity.DossierPieceCommune;
 import mg.visa.entity.DossierPieceComplementaire;
 import mg.visa.entity.ref.StatutDossier;
-import mg.visa.entity.ref.StatutPiece;
+import mg.visa.entity.ref.TypeDemande;
 import mg.visa.repository.CataloguePieceCommuneRepository;
 import mg.visa.repository.CataloguePieceComplementaireRepository;
 import mg.visa.repository.DemandeRepository;
@@ -33,24 +36,22 @@ public class DossierService {
     private final DossierRepository dossierRepository;
     private final DemandeRepository demandeRepository;
     private final StatutDossierRepository statutDossierRepository;
-    private final StatutPieceRepository statutPieceRepository;
+    private final DossierPieceCommuneRepository dossierPieceCommuneRepository;
     private final CataloguePieceCommuneRepository cataloguePieceCommuneRepository;
     private final CataloguePieceComplementaireRepository cataloguePieceComplementaireRepository;
-    private final DossierPieceCommuneRepository dossierPieceCommuneRepository;
     private final DossierPieceComplementaireRepository dossierPieceComplementaireRepository;
 
     public DossierService(DossierRepository dossierRepository,
-                         DemandeRepository demandeRepository,
-                         StatutDossierRepository statutDossierRepository,
-                         StatutPieceRepository statutPieceRepository,
-                         CataloguePieceCommuneRepository cataloguePieceCommuneRepository,
-                         CataloguePieceComplementaireRepository cataloguePieceComplementaireRepository,
-                         DossierPieceCommuneRepository dossierPieceCommuneRepository,
-                         DossierPieceComplementaireRepository dossierPieceComplementaireRepository) {
+            DemandeRepository demandeRepository,
+            StatutDossierRepository statutDossierRepository,
+            StatutPieceRepository statutPieceRepository,
+            CataloguePieceCommuneRepository cataloguePieceCommuneRepository,
+            CataloguePieceComplementaireRepository cataloguePieceComplementaireRepository,
+            DossierPieceCommuneRepository dossierPieceCommuneRepository,
+            DossierPieceComplementaireRepository dossierPieceComplementaireRepository) {
         this.dossierRepository = dossierRepository;
         this.demandeRepository = demandeRepository;
         this.statutDossierRepository = statutDossierRepository;
-        this.statutPieceRepository = statutPieceRepository;
         this.cataloguePieceCommuneRepository = cataloguePieceCommuneRepository;
         this.cataloguePieceComplementaireRepository = cataloguePieceComplementaireRepository;
         this.dossierPieceCommuneRepository = dossierPieceCommuneRepository;
@@ -59,7 +60,8 @@ public class DossierService {
 
     @Transactional
     public DossierCreationResult creerDossier(DossierCreationDTO dto) {
-        if (dto.getDemandeId() == null) throw new ResponseStatusException(BAD_REQUEST, "demandeId requis");
+        if (dto.getDemandeId() == null)
+            throw new ResponseStatusException(BAD_REQUEST, "demandeId requis");
 
         Demande demande = demandeRepository.findById(dto.getDemandeId())
                 .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "demande introuvable"));
@@ -69,82 +71,168 @@ public class DossierService {
         dossier.setNumeroDossier("D-" + System.currentTimeMillis());
         dossier.setCreatedBy(dto.getCreatedBy());
 
-        // statut dossier par défaut
-        StatutDossier sd = statutDossierRepository.findByCode("OPEN").orElse(null);
+        StatutDossier sd = statutDossierRepository.findByCode("OPEN");
         dossier.setStatutDossier(sd);
 
         Dossier saved = dossierRepository.save(dossier);
 
-        // initialiser pièces communes
-        List<CataloguePieceCommune> communes = cataloguePieceCommuneRepository.findAll();
-        StatutPiece nonFourni = statutPieceRepository.findByCode("NON_FOURNI").orElse(null);
+        return new DossierCreationResult(saved, new ArrayList<>());
+    }
 
-        for (CataloguePieceCommune c : communes) {
-            DossierPieceCommune dpc = new DossierPieceCommune();
-            dpc.setDossier(saved);
-            dpc.setCataloguePieceCommune(c);
-            dpc.setStatutPiece(nonFourni);
-            dossierPieceCommuneRepository.save(dpc);
-        }
+    public DossierPieceCommune ajouterPieceCommune(Long dossierId, Long cataloguePieceId) {
+        Dossier dossier = dossierRepository.findById(dossierId)
+                .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "dossier introuvable"));
 
-        // initialiser pièces complémentaires
-        List<CataloguePieceComplementaire> comps = cataloguePieceComplementaireRepository.findAll();
-        for (CataloguePieceComplementaire c : comps) {
-            DossierPieceComplementaire dpc = new DossierPieceComplementaire();
-            dpc.setDossier(saved);
-            dpc.setCataloguePieceComplementaire(c);
-            dpc.setStatutPiece(nonFourni);
-            dossierPieceComplementaireRepository.save(dpc);
-        }
+        CataloguePieceCommune catPiece = cataloguePieceCommuneRepository.findById(cataloguePieceId)
+                .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "catalogue piece commune introuvable"));
 
-        // Vérifier pièces obligatoires présentes dans le dossier (collecter celles manquantes)
-        List<String> missing = new ArrayList<>();
+        DossierPieceCommune dpc = new DossierPieceCommune();
+        dpc.setDossier(dossier);
+        dpc.setCataloguePieceCommune(catPiece);
+        dpc.setStatutPiece(null); // devient FOURNI après upload
 
-        // Communes obligatoires
-        List<DossierPieceCommune> dpcCommunes = dossierPieceCommuneRepository.findByDossierId(saved.getId());
-        for (DossierPieceCommune dpc : dpcCommunes) {
-            CataloguePieceCommune cat = dpc.getCataloguePieceCommune();
-            if (Boolean.TRUE.equals(cat.getObligatoire())) {
-                if (dpc.getStatutPiece() == null || dpc.getStatutPiece().getCode() == null || !"FOURNI".equalsIgnoreCase(dpc.getStatutPiece().getCode())) {
-                    missing.add("COMMUNE:" + (cat.getCode() != null ? cat.getCode() : cat.getLibelle()));
-                }
+        return dossierPieceCommuneRepository.save(dpc);
+    }
+
+    @Transactional
+    public List<DossierPieceCommune> ajouterPieceCommuneMultiple(Long dossierId,
+            List<Long> cataloguePieceIds) {
+        List<CataloguePieceCommune> cataloguePieceCommunes = cataloguePieceCommuneRepository
+                .findAllById(cataloguePieceIds);
+        List<DossierPieceCommune> result = new ArrayList<>();
+
+        // Vérifier la complétude AVANT insertion (sinon rollback partiel)
+        if (!verifierCompletudeCommune(cataloguePieceCommunes)) {
+            throw new ResponseStatusException(BAD_REQUEST, "Pieces obligatoires incompletes");
+        } else {
+            for (Long catId : cataloguePieceIds) {
+                result.add(ajouterPieceCommune(dossierId, catId));
             }
         }
+        return result;
+    }
 
-        // Complémentaires obligatoires
-        List<DossierPieceComplementaire> dpcComps = dossierPieceComplementaireRepository.findByDossierId(saved.getId());
-        for (DossierPieceComplementaire dpc : dpcComps) {
-            CataloguePieceComplementaire cat = dpc.getCataloguePieceComplementaire();
-            if (Boolean.TRUE.equals(cat.getObligatoire())) {
-                if (dpc.getStatutPiece() == null || dpc.getStatutPiece().getCode() == null || !"FOURNI".equalsIgnoreCase(dpc.getStatutPiece().getCode())) {
-                    missing.add("COMPLEMENTAIRE:" + (cat.getCode() != null ? cat.getCode() : cat.getLibelle()));
-                }
+    public boolean verifierCompletudeCommune(List<CataloguePieceCommune> communes) {
+        List<CataloguePieceCommune> catalogueCommunes = cataloguePieceCommuneRepository.findAll();
+        List<CataloguePieceCommune> obligatoireCommunes = new ArrayList<>();
+        for (CataloguePieceCommune cpc : catalogueCommunes) {
+            if (Boolean.TRUE.equals(cpc.getObligatoire())) {
+                obligatoireCommunes.add(cpc);
             }
         }
+        return communes.containsAll(obligatoireCommunes);
+    }
 
-        if (!missing.isEmpty()) {
-            throw new mg.visa.exception.MissingPiecesException(missing);
+    public DossierPieceComplementaire ajouterPieceComplementaire(Long dossierId, Long cataloguePieceId) {
+        Dossier dossier = dossierRepository.findById(dossierId)
+                .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "dossier introuvable"));
+
+        CataloguePieceComplementaire catPiece = cataloguePieceComplementaireRepository.findById(cataloguePieceId)
+                .orElseThrow(
+                        () -> new ResponseStatusException(BAD_REQUEST, "catalogue piece complementaire introuvable"));
+
+        DossierPieceComplementaire dpc = new DossierPieceComplementaire();
+        dpc.setDossier(dossier);
+        dpc.setCataloguePieceComplementaire(catPiece);
+        dpc.setStatutPiece(null); // devient FOURNI après upload
+
+        return dossierPieceComplementaireRepository.save(dpc);
+    }
+
+    @Transactional
+    public List<DossierPieceComplementaire> ajouterPieceComplementaireMultiple(Long dossierId,
+            List<Long> cataloguePieceIds) {
+        Dossier dossier = dossierRepository.findById(dossierId).get();
+        TypeDemande typeVisa = dossier.getDemande().getTypeDemande();
+
+        List<CataloguePieceComplementaire> cataloguePieceComplementaires = cataloguePieceComplementaireRepository
+                .findAllById(cataloguePieceIds);
+        List<DossierPieceComplementaire> result = new ArrayList<>();
+
+        // Vérifier la complétude AVANT insertion (sinon rollback partiel)
+        if (!verifierCompletudeComplementaire(cataloguePieceComplementaires, typeVisa.getCode())) {
+            throw new ResponseStatusException(BAD_REQUEST, "Pieces obligatoires incompletes");
+        } else {
+            for (Long catId : cataloguePieceIds) {
+                result.add(ajouterPieceComplementaire(dossierId, catId));
+            }
         }
+        return result;
+    }
 
-        return new mg.visa.dto.DossierCreationResult(saved, missing);
+    public boolean verifierCompletudeComplementaire(List<CataloguePieceComplementaire> complementaires,
+            String typeVisaCode) {
+        List<CataloguePieceComplementaire> catalogueComplementaire = cataloguePieceComplementaireRepository
+                .findByTypeVisaCode(typeVisaCode);
+        List<CataloguePieceComplementaire> obligatoireComplementaires = new ArrayList<>();
+        for (CataloguePieceComplementaire cpc : catalogueComplementaire) {
+            if (Boolean.TRUE.equals(cpc.getObligatoire())) {
+                obligatoireComplementaires.add(cpc);
+            }
+        }
+        return complementaires.containsAll(obligatoireComplementaires);
+    }
+
+    public void validationCreationDossier(DossierCreationDTO dto) {
+        if (dto.getDemandeId() == null)
+            throw new ResponseStatusException(BAD_REQUEST, "demandeId requis");
+        if (!this.verifierCompletude(dto.getDemandeId()))
+            throw new ResponseStatusException(BAD_REQUEST, "dossier incomplet, pieces manquantes");
     }
 
     public boolean verifierCompletude(Long dossierId) {
-        // Check all mandatory catalogue pieces (commune)
-        List<DossierPieceCommune> communes = dossierPieceCommuneRepository.findByDossierId(dossierId);
-        for (DossierPieceCommune dpc : communes) {
-            if (Boolean.TRUE.equals(dpc.getCataloguePieceCommune().getObligatoire())) {
-                if (dpc.getStatutPiece() == null || !"FOURNI".equalsIgnoreCase(dpc.getStatutPiece().getCode())) {
+        // Verify that all catalogue-defined mandatory commune pieces are provided with
+        // statut FOURNI
+        List<CataloguePieceCommune> catalogueCommunes = cataloguePieceCommuneRepository.findAll();
+        if (catalogueCommunes != null && !catalogueCommunes.isEmpty()) {
+            Set<Long> requiredCommuneIds = catalogueCommunes.stream()
+                    .filter(c -> Boolean.TRUE.equals(c.getObligatoire()))
+                    .map(CataloguePieceCommune::getId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+
+            if (!requiredCommuneIds.isEmpty()) {
+                List<DossierPieceCommune> communes = dossierPieceCommuneRepository.findByDossierId(dossierId);
+                Set<Long> providedCommuneIds = communes == null ? java.util.Collections.emptySet()
+                        : communes.stream()
+                                .filter(dpc -> dpc.getStatutPiece() != null
+                                        && "FOURNI".equalsIgnoreCase(dpc.getStatutPiece().getCode()))
+                                .map(dpc -> dpc.getCataloguePieceCommune() != null
+                                        ? dpc.getCataloguePieceCommune().getId()
+                                        : null)
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toSet());
+
+                if (!providedCommuneIds.containsAll(requiredCommuneIds)) {
                     return false;
                 }
             }
         }
 
-        // Check mandatory complementary pieces
-        List<DossierPieceComplementaire> comps = dossierPieceComplementaireRepository.findByDossierId(dossierId);
-        for (DossierPieceComplementaire dpc : comps) {
-            if (Boolean.TRUE.equals(dpc.getCataloguePieceComplementaire().getObligatoire())) {
-                if (dpc.getStatutPiece() == null || !"FOURNI".equalsIgnoreCase(dpc.getStatutPiece().getCode())) {
+        // Verify that all catalogue-defined mandatory complementaire pieces are
+        // provided with statut FOURNI
+        List<CataloguePieceComplementaire> catalogueComplementaires = cataloguePieceComplementaireRepository.findAll();
+        if (catalogueComplementaires != null && !catalogueComplementaires.isEmpty()) {
+            Set<Long> requiredCompIds = catalogueComplementaires.stream()
+                    .filter(c -> Boolean.TRUE.equals(c.getObligatoire()))
+                    .map(CataloguePieceComplementaire::getId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+
+            if (!requiredCompIds.isEmpty()) {
+                List<DossierPieceComplementaire> comps = dossierPieceComplementaireRepository
+                        .findByDossierId(dossierId);
+                Set<Long> providedCompIds = comps == null ? java.util.Collections.emptySet()
+                        : comps.stream()
+                                .filter(dpc -> dpc.getStatutPiece() != null
+                                        && "FOURNI".equalsIgnoreCase(dpc.getStatutPiece().getCode()))
+                                .map(dpc -> dpc.getCataloguePieceComplementaire() != null
+                                        ? dpc.getCataloguePieceComplementaire().getId()
+                                        : null)
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toSet());
+
+                if (!providedCompIds.containsAll(requiredCompIds)) {
                     return false;
                 }
             }
@@ -158,16 +246,19 @@ public class DossierService {
         Dossier dossier = dossierRepository.findById(dossierId)
                 .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "dossier introuvable"));
 
-        if (statutCode == null || statutCode.isBlank()) throw new ResponseStatusException(BAD_REQUEST, "statutCode requis");
+        if (statutCode == null || statutCode.isBlank())
+            throw new ResponseStatusException(BAD_REQUEST, "statutCode requis");
 
         // If approving, ensure dossier is complete
-        if (statutCode.equalsIgnoreCase("APPROUVE") || statutCode.equalsIgnoreCase("APPROVED") || statutCode.equalsIgnoreCase("APPROVE")) {
-            if (!verifierCompletude(dossierId)) {
-                throw new ResponseStatusException(BAD_REQUEST, "dossier incomplet, impossible d'approuver");
-            }
+        if (statutCode.equalsIgnoreCase("APPROUVE") || statutCode.equalsIgnoreCase("APPROVED")
+                || statutCode.equalsIgnoreCase("APPROVE")) {
+            // if (!verifierCompletude(dossierId)) {
+            // throw new ResponseStatusException(BAD_REQUEST, "dossier incomplet, impossible
+            // d'approuver");
+            // }
         }
 
-        StatutDossier sd = statutDossierRepository.findByCode(statutCode).orElse(null);
+        StatutDossier sd = statutDossierRepository.findByCode(statutCode);
         if (sd == null) {
             // create new statut if not exists
             sd = new StatutDossier();
