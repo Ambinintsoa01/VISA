@@ -51,7 +51,7 @@ public class PieceService {
 
         String path = fileStorageService.store(file);
 
-        StatutPiece fourni = statutPieceRepository.findByCode("FOURNI").orElse(null);
+        StatutPiece fourni = statutPieceRepository.findByCode("FOURNI");
         dpc.setFichierPath(path);
         dpc.setDateFourni(OffsetDateTime.now());
         if (fourni != null) dpc.setStatutPiece(fourni);
@@ -72,7 +72,7 @@ public class PieceService {
 
         String path = fileStorageService.store(file);
 
-        StatutPiece fourni = statutPieceRepository.findByCode("FOURNI").orElse(null);
+        StatutPiece fourni = statutPieceRepository.findByCode("FOURNI");
         dpc.setFichierPath(path);
         dpc.setDateFourni(OffsetDateTime.now());
         if (fourni != null) dpc.setStatutPiece(fourni);

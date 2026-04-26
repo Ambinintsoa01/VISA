@@ -4,8 +4,9 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import mg.visa.dto.VisaTransformableDTO;
 import com.google.gson.Gson;
+
+import mg.visa.dto.VisaTransformableDTO;
 import mg.visa.entity.Passeport;
 import mg.visa.entity.VisaTransformable;
 import mg.visa.entity.ref.TypeVisa;
@@ -45,8 +46,8 @@ public class VisaTransformableService {
 
         // infos can be sent as JSON object or string; serialize to text
         if (dto.getInfos() != null) {
-            if (dto.getInfos() instanceof String) {
-                vt.setInfos((String) dto.getInfos());
+            if (dto.getInfos() instanceof String string) {
+                vt.setInfos(string);
             } else {
                 vt.setInfos(new Gson().toJson(dto.getInfos()));
             }
