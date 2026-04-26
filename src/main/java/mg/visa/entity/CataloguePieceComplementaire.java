@@ -5,7 +5,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import mg.visa.entity.ref.TypeVisa;
 
 @Entity
 @Table(name = "catalogue_piece_complementaire")
@@ -24,6 +27,10 @@ public class CataloguePieceComplementaire {
     @Column(name = "obligatoire")
     private Boolean obligatoire = false;
 
+    @ManyToOne
+    @JoinColumn(name = "type_visa_id")
+    private TypeVisa typeVisa;
+
     public CataloguePieceComplementaire() {}
 
     public Long getId() { return id; }
@@ -34,4 +41,7 @@ public class CataloguePieceComplementaire {
     public void setLibelle(String libelle) { this.libelle = libelle; }
     public Boolean getObligatoire() { return obligatoire; }
     public void setObligatoire(Boolean obligatoire) { this.obligatoire = obligatoire; }
+
+    public TypeVisa getTypeVisa() { return typeVisa; }
+    public void setTypeVisa(TypeVisa typeVisa) { this.typeVisa = typeVisa; }
 }
