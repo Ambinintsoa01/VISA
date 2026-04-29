@@ -252,10 +252,9 @@ public class DossierService {
         // If approving, ensure dossier is complete
         if (statutCode.equalsIgnoreCase("APPROUVE") || statutCode.equalsIgnoreCase("APPROVED")
                 || statutCode.equalsIgnoreCase("APPROVE")) {
-            // if (!verifierCompletude(dossierId)) {
-            // throw new ResponseStatusException(BAD_REQUEST, "dossier incomplet, impossible
-            // d'approuver");
-            // }
+            if (!verifierCompletude(dossierId)) {
+                throw new ResponseStatusException(BAD_REQUEST, "dossier incomplet, impossible d'approuver");
+            }
         }
 
         StatutDossier sd = statutDossierRepository.findByCode(statutCode);
