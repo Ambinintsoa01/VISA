@@ -524,6 +524,30 @@ function submitDuplicata() {
 
     if (!validateStep('step2')) return;
 
+    fetch(API_BASE_URL + '/dossiers/' + duplicataState.dossierId + '/completude')
+        .then(resp => resp.ok ? resp.json() : resp.text().then(t => { throw new Error(t || 'Erreur complétude'); }))
+        .then(body => {
+            if (!body || body.completude !== true) {
+                showAlert('Le dossier n\'est pas complet. Uploadez toutes les pièces obligatoires.', 'warning');
+                return null;
+            }
+            return fetch(API_BASE_URL + '/dossiers/' + duplicataState.dossierId + '/statut', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: 'APPROUVE' })
+            });
+        })
+        .then(resp => {
+            if (!resp) return;
+            if (!resp.ok) {
+                return resp.text().then(t => { throw new Error(t || 'Erreur changement statut'); });
+            }
+        })
+        .catch(err => {
+            console.error('Erreur statut dossier:', err);
+            showAlert('Erreur validation dossier: ' + (err.message || err), 'danger');
+        });
+
     // Frontend uniquement: pas d'endpoint dédié duplicata dans ce projet.
     // On considère la saisie complète côté UI.
     const payload = {

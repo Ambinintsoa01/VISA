@@ -378,6 +378,7 @@ async function loadPieces() {
             const complementaires = Array.isArray(piecesBody.complementaires) ? piecesBody.complementaires : [];
             renderPieces(communes, complementaires);
             updatePiecesProgress(communes.concat(complementaires));
+            await updateSubmitAvailability();
             return;
         }
 
@@ -387,6 +388,7 @@ async function loadPieces() {
             piecesList.innerHTML = '<p class="text-muted">Sélectionnez les pièces puis cliquez sur « Créer le Dossier ».</p>';
         }
         updatePiecesProgress([]);
+        updateSubmitButtonState(false);
     } catch (error) {
         console.error('❌ ERREUR ÉTAPE 3:', error);
         formState.apiError = true;
@@ -661,15 +663,20 @@ async function submitForm() {
             throw new Error('Veuillez créer le dossier et uploader les pièces avant de soumettre.');
         }
 
-        const completudeResp = await fetch(API_BASE_URL + '/dossiers/' + formState.dossierId + '/completude');
-        if (!completudeResp.ok) {
-            const errText = await completudeResp.text();
-            throw new Error('Erreur vérification complétude: ' + errText);
-        }
-        const completudeBody = await completudeResp.json();
-        if (!completudeBody || completudeBody.completude !== true) {
+        const isComplete = await updateSubmitAvailability();
+        if (!isComplete) {
             showAlert('Le dossier n\'est pas complet. Uploadez toutes les pièces obligatoires.', 'warning');
             return;
+        }
+
+        const statutResponse = await fetch(API_BASE_URL + '/dossiers/' + formState.dossierId + '/statut', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: 'APPROUVE' })
+        });
+        if (!statutResponse.ok) {
+            const errText = await statutResponse.text();
+            throw new Error('Erreur changement statut: ' + errText);
         }
 
         showSuccessModal(formState.dossierId);
@@ -761,6 +768,28 @@ async function createDossierForUpload() {
         console.error('❌ Erreur createDossierForUpload:', error);
         showAlert(error.message || 'Erreur lors de la création du dossier', 'danger');
     }
+}
+
+async function updateSubmitAvailability() {
+    if (!formState.dossierId) {
+        updateSubmitButtonState(false);
+        return false;
+    }
+    const completudeResp = await fetch(API_BASE_URL + '/dossiers/' + formState.dossierId + '/completude');
+    if (!completudeResp.ok) {
+        const errText = await completudeResp.text();
+        throw new Error('Erreur vérification complétude: ' + errText);
+    }
+    const completudeBody = await completudeResp.json();
+    const isComplete = Boolean(completudeBody && completudeBody.completude === true);
+    updateSubmitButtonState(isComplete);
+    return isComplete;
+}
+
+function updateSubmitButtonState(isComplete) {
+    const btnValider = document.getElementById('btnValider');
+    if (!btnValider) return;
+    btnValider.disabled = !isComplete;
 }
 
 function updatePiecesProgress(pieces) {
