@@ -17,16 +17,15 @@ let formState = {
         passeport: {},
         visaTransformable: {},
         demande: {}
-    }
+    },
+    piecesCreated: false
 };
-
 // Initialisation
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Formulaire chargé');
     loadRefData();
     setupEventListeners();
 });
-
 // ============================================
 // GESTION DES ÉTAPES
 // ============================================
@@ -36,6 +35,10 @@ function setupEventListeners() {
     document.getElementById('btnPrecedent').addEventListener('click', goToPreviousStep);
     document.getElementById('btnValider').addEventListener('click', submitForm);
     document.getElementById('btnCloseSuccess').addEventListener('click', resetForm);
+    const btnCreerDossierStep3 = document.getElementById('btnCreerDossierStep3');
+    if (btnCreerDossierStep3) {
+        btnCreerDossierStep3.addEventListener('click', createDossierForUpload);
+    }
 }
 
 async function goToNextStep() {
@@ -131,7 +134,6 @@ function updateFormButtons(stepNumber) {
 // ============================================
 // VALIDATION
 // ============================================
-
 function validateCurrentStep() {
     const currentStepDiv = document.getElementById('step' + formState.currentStep);
     const inputs = currentStepDiv.querySelectorAll('input, select');
@@ -371,6 +373,11 @@ async function loadPieces() {
                 const errText = await piecesResponse.text();
                 throw new Error('Erreur chargement pièces: ' + errText);
             }
+            const piecesBody = await piecesResponse.json();
+            const communes = Array.isArray(piecesBody.communes) ? piecesBody.communes : [];
+            const complementaires = Array.isArray(piecesBody.complementaires) ? piecesBody.complementaires : [];
+            renderPieces(communes, complementaires);
+            updatePiecesProgress(communes.concat(complementaires));
             return;
         }
 
@@ -385,6 +392,74 @@ async function loadPieces() {
         formState.apiError = true;
         showAlert('Erreur Étape 3: ' + error.message, 'danger');
     }
+}
+
+function renderPieces(communes, complementaires) {
+    const piecesList = document.getElementById('piecesList');
+    if (!piecesList) return;
+
+    const renderTable = (rows, kindLabel, kindApiPath) => {
+        let html = '<div class="card mb-3">';
+        html += '<div class="card-header">' + kindLabel + '</div>';
+        html += '<div class="card-body">';
+        if (!rows || rows.length === 0) {
+            html += '<p class="text-muted">Aucune pièce.</p>';
+        } else {
+            html += '<div class="table-responsive">';
+            html += '<table class="table table-hover">';
+            html += '<thead><tr><th>Pièce</th><th>Statut</th><th>Fichier</th><th style="width: 180px;">Action</th></tr></thead><tbody>';
+            rows.forEach(row => {
+                const label = getPieceLabel(row);
+                const statusCode = (row.statutPiece && row.statutPiece.code) ? String(row.statutPiece.code).toUpperCase() : 'NON_FOURNI';
+                const filePath = row.fichierPath ? String(row.fichierPath) : '';
+                const hasFile = Boolean(filePath);
+                const isFourni = statusCode === 'FOURNI' || hasFile;
+                const badgeClass = isFourni ? 'bg-success' : 'bg-warning';
+                const badgeLabel = isFourni ? 'FOURNI' : 'NON FOURNI';
+
+                html += '<tr>';
+                html += '<td>' + escapeHtml(label) + '</td>';
+                html += '<td><span class="badge ' + badgeClass + '">' + badgeLabel + '</span></td>';
+                html += '<td>' + (filePath ? ('<span class="text-muted">' + escapeHtml(filePath) + '</span>') : '<span class="text-muted">—</span>') + '</td>';
+                html += '<td>';
+                html += '<button type="button" class="btn btn-outline-primary btn-sm" data-upload-kind="' + kindApiPath + '" data-piece-id="' + row.id + '">';
+                html += '<i class="fas fa-upload"></i> Uploader';
+                html += '</button>';
+                html += '</td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+        }
+        html += '</div></div>';
+        return html;
+    };
+
+    piecesList.innerHTML =
+        renderTable(communes, 'Pièces communes', 'communes') +
+        renderTable(complementaires, 'Pièces complémentaires', 'complementaires');
+
+    piecesList.querySelectorAll('button[data-upload-kind]').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const kind = btn.getAttribute('data-upload-kind');
+            const pieceId = btn.getAttribute('data-piece-id');
+            uploadPiece(pieceId, formState.dossierId, kind);
+        });
+    });
+}
+
+function getPieceLabel(row) {
+    if (row.cataloguePieceCommune) return row.cataloguePieceCommune.libelle || row.cataloguePieceCommune.code || ('Pièce ' + row.id);
+    if (row.cataloguePieceComplementaire) return row.cataloguePieceComplementaire.libelle || row.cataloguePieceComplementaire.code || ('Pièce ' + row.id);
+    return 'Pièce ' + row.id;
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 function normalizePiecesResponse(piecesResp) {
@@ -582,12 +657,45 @@ async function submitForm() {
         // Toujours synchroniser les sélections avant envoi
         onCatalogueChange();
 
-        // Vérifier les IDs nécessaires
+        if (!formState.dossierId) {
+            throw new Error('Veuillez créer le dossier et uploader les pièces avant de soumettre.');
+        }
+
+        const completudeResp = await fetch(API_BASE_URL + '/dossiers/' + formState.dossierId + '/completude');
+        if (!completudeResp.ok) {
+            const errText = await completudeResp.text();
+            throw new Error('Erreur vérification complétude: ' + errText);
+        }
+        const completudeBody = await completudeResp.json();
+        if (!completudeBody || completudeBody.completude !== true) {
+            showAlert('Le dossier n\'est pas complet. Uploadez toutes les pièces obligatoires.', 'warning');
+            return;
+        }
+
+        showSuccessModal(formState.dossierId);
+    } catch (error) {
+        formState.apiError = true;
+        console.error('❌ Erreur submitForm:', error);
+        showAlert(error.message || 'Erreur lors de la création du dossier', 'danger');
+    }
+}
+
+async function createDossierForUpload() {
+    try {
+        formState.apiError = false;
+
+        onCatalogueChange();
+
         if (!formState.demandeurId) throw new Error('ID demandeur manquant');
         if (!formState.passeportId) throw new Error('ID passeport manquant');
         if (!formState.visaTransformableId) throw new Error('ID visa manquant');
 
-        // 1) Créer une demande
+        if (formState.dossierId) {
+            showAlert('Le dossier est déjà créé. Vous pouvez uploader les pièces.', 'info');
+            await loadPieces();
+            return;
+        }
+
         const demandeData = {
             demandeurId: formState.demandeurId,
             passeportId: formState.passeportId,
@@ -608,7 +716,6 @@ async function submitForm() {
         if (!demande || !demande.id) throw new Error('Demande créée mais sans ID');
         formState.demandeId = demande.id;
 
-        // 2) Créer le dossier
         const dossierResponse = await fetch(API_BASE_URL + '/dossiers', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -623,7 +730,6 @@ async function submitForm() {
         if (!dossier || !dossier.id) throw new Error('Réponse invalide du serveur: ID dossier manquant');
         formState.dossierId = dossier.id;
 
-        // 3) Insérer les pièces via les endpoints dédiés (même si liste vide pour forcer la validation backend)
         const communes = Array.isArray(formState.selectedCommunes) ? formState.selectedCommunes : [];
         const complementaires = Array.isArray(formState.selectedComplementaires) ? formState.selectedComplementaires : [];
 
@@ -647,12 +753,12 @@ async function submitForm() {
             throw new Error('Erreur création pièces complémentaires: ' + errText);
         }
 
-        // 4) Charger les pièces du dossier et afficher le succès
+        formState.piecesCreated = true;
         await loadPieces();
-        showSuccessModal(formState.dossierId);
+        showAlert('Dossier créé. Uploadez les pièces puis soumettez le dossier.', 'success');
     } catch (error) {
         formState.apiError = true;
-        console.error('❌ Erreur submitForm:', error);
+        console.error('❌ Erreur createDossierForUpload:', error);
         showAlert(error.message || 'Erreur lors de la création du dossier', 'danger');
     }
 }
@@ -660,7 +766,11 @@ async function submitForm() {
 function updatePiecesProgress(pieces) {
     const totalPieces = Array.isArray(pieces) ? pieces.length : 0;
     const piecesFournies = Array.isArray(pieces)
-        ? pieces.filter(p => p && p.statutPiece && String(p.statutPiece.code || '').toUpperCase() === 'FOURNI').length
+        ? pieces.filter(p => {
+            const status = p && p.statutPiece ? String(p.statutPiece.code || '').toUpperCase() : '';
+            const hasFile = p && p.fichierPath;
+            return status === 'FOURNI' || Boolean(hasFile);
+        }).length
         : 0;
     const progressPercent = totalPieces > 0 ? (piecesFournies / totalPieces) * 100 : 0;
 
@@ -687,6 +797,7 @@ function resetForm() {
         selectedCommunes: [],
         selectedComplementaires: [],
         apiError: false,
+        piecesCreated: false,
         formData: {
             demandeur: {},
             passeport: {},

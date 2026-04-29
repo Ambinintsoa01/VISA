@@ -415,10 +415,11 @@ function renderPieces(communes, complementaires) {
             rows.forEach(row => {
                 const label = getPieceLabel(row);
                 const statusCode = (row.statutPiece && row.statutPiece.code) ? String(row.statutPiece.code).toUpperCase() : 'NON_FOURNI';
-                const isFourni = statusCode === 'FOURNI';
+                const filePath = row.fichierPath ? String(row.fichierPath) : '';
+                const hasFile = Boolean(filePath);
+                const isFourni = statusCode === 'FOURNI' || hasFile;
                 const badgeClass = isFourni ? 'bg-success' : 'bg-warning';
                 const badgeLabel = isFourni ? 'FOURNI' : 'NON FOURNI';
-                const filePath = row.fichierPath ? String(row.fichierPath) : '';
 
                 html += '<tr>';
                 html += '<td>' + escapeHtml(label) + '</td>';
@@ -492,7 +493,11 @@ function uploadPiece(pieceId, dossierId, kind) {
 function updatePiecesProgress(pieces) {
     const totalPieces = Array.isArray(pieces) ? pieces.length : 0;
     const piecesFournies = Array.isArray(pieces)
-        ? pieces.filter(p => p && p.statutPiece && String(p.statutPiece.code || '').toUpperCase() === 'FOURNI').length
+        ? pieces.filter(p => {
+            const status = p && p.statutPiece ? String(p.statutPiece.code || '').toUpperCase() : '';
+            const hasFile = p && p.fichierPath;
+            return status === 'FOURNI' || Boolean(hasFile);
+        }).length
         : 0;
     const progressPercent = totalPieces > 0 ? (piecesFournies / totalPieces) * 100 : 0;
 
