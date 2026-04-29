@@ -15,4 +15,9 @@ public class HomeController {
     public String formulaireDossier() {
         return "formulaire-dossier";
     }
+
+    @GetMapping("/duplicata")
+    public String duplicata() {
+        return "duplicata-dossier";
+    }
 }
