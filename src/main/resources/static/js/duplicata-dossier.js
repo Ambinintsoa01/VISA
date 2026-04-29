@@ -134,6 +134,20 @@ function populateSelect(selectId, data) {
         option.textContent = item.libelle ?? item.name ?? item.label ?? item.code ?? String(item);
         select.appendChild(option);
     });
+
+    // Valeur par défaut: auto-sélection de la première option chargée
+    if (select.dataset && String(select.dataset.autoselectFirst || '').toLowerCase() === 'true') {
+        // index 0 = placeholder, index 1 = première vraie option
+        if (!select.value && select.options && select.options.length > 1) {
+            select.value = select.options[1].value;
+            // Déclencher les listeners (ex: recharge du catalogue sur typeDemande)
+            try {
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+            } catch (_) {
+                // ignore
+            }
+        }
+    }
 }
 
 // ============================================
